@@ -12,7 +12,7 @@ from aws_connect import S3
 
 ##6d95b0 90b7d1 
 textColor="#6d95b0" 
-secondaryBackgroundColor="#e9eff2"
+primaryColor="#6d95b0" 
 
 def blank(): return st.write('')  
 
@@ -53,7 +53,7 @@ st.header("DotBot 🤖")
 #st.markdown(hide_st_style, unsafe_allow_html=True)
 
 
-ask_tab, input_tab = st.tabs(['ChatDB', 'Submit Content'])
+ask_tab, input_tab, modify_tab = st.tabs(['ChatDB', 'Submit Content', 'View Content'])
 
 with ask_tab:    
     
@@ -86,7 +86,8 @@ with ask_tab:
 with input_tab: 
     with st.form(key='submit-form'):  
         
-        upload_type = st.radio("Upload type", ['write custom text', 'upload document'], help="")  
+        st.caption("1. Create or upload content")
+        upload_type = st.selectbox("Upload type", ['choose an option', 'write custom text', 'upload document'], help="")  
         blank() 
         
         with st.expander("Text"):  
@@ -99,136 +100,176 @@ with input_tab:
             doc_topic = st.text_input("Topic")
             user_doc = st.file_uploader("Upload document (.pdf, .docx, and .txt supported)", accept_multiple_files=False) 
             chunkify = st.checkbox("Break content into chunks", True, help="unchecking this box will feed the entire piece of content in as one rather than breaking it into chunks")
-            
-        blank()
+        
+        st.markdown('----') 
+        st.caption("2. Add supplementary information (optional)")
         tags = st.multiselect("Select tags (optional)", [] + sorted([x.lower() for x in tag_options]), help="Tags will allow for filtering. For example, if you're submitting content specific to RD001, include the 'RD001' tag to help DB match to RD001 when a user asks a question about that site") 
         attachments = st.file_uploader("Add attachments (optional)", accept_multiple_files=False, help="Include any attachments that serve as a good reference for the content you're submitting. \n\n**All file types accepted**")
         
-        st.markdown("----")
+        st.markdown("----") 
+        st.caption("3. Input credentials")
         name = st.text_input("Name") 
         password = st.text_input("Password")
         submit = st.form_submit_button("Submit")  
         
     if submit:  
         
-        # todo: check for required info 
+        # todo: check for required info   
+        text_upload = upload_type == 'write custom text' 
+        doc_upload = upload_type == 'upload document'  
         
-        password_valid = helpers.password_authenticate(password)
+        upload_check = upload_type.lower() != 'choose an option'  
         
-        if password_valid:   
-            
-            # generate content id 
-            content_id = helpers.get_id()   
-            
-            # instantiate embedding class
-            em = Embedder(index)  
+        if not upload_check: 
+            st.error("Please choose an upload option")
         
-            text_upload = upload_type == 'write custom text' 
-            doc_upload = upload_type == 'upload document'  
+        if text_upload: 
+            topic_check = text_topic != '' 
+            content_check = user_text != '' 
+        
+        if doc_upload: 
+            topic_check = doc_topic != '' 
+            content_check = user_doc is not None  
             
-            metadata = {
-                'text_upload': text_upload, 
-                'doc_upload': doc_upload, 
-                'tags': tags, 
-                'submitted_by': name, 
-            }
+        if not (topic_check & content_check): 
+            st.error("Make sure you inputted a **topic** and **content** to the system")
             
-            
-            
-            if attachments is not None: 
-                    
-                attachment_data = {
-                    'content_id': content_id, 
-                    'file_type': check_file_type(attachments), 
-                    'contents': attachments
-                } 
+        name_check = name != '' 
+        
+        all_checks_passed = upload_check & topic_check & content_check & name_check
+         
+        if all_checks_passed:
+            password_valid = helpers.password_authenticate(password)
 
-                
-                s3_path = f"attachments/{content_id}.pkl" 
-                
-                metadata['attachments'] = True  
-                metadata['attachments_s3_path'] = s3_path  
+            if password_valid:   
+
+                # generate content id 
+                content_id = helpers.get_id()   
+
+                # instantiate embedding class
+                em = Embedder(index)   
+                s3 = S3() 
+
+
+                metadata = {
+                    'text_upload': text_upload, 
+                    'doc_upload': doc_upload, 
+                    'tags': tags, 
+                    'submitted_by': name, 
+                }
+
+
+                if attachments is not None: 
+
+                    attachment_data = {
+                        'content_id': content_id, 
+                        'file_type': check_file_type(attachments), 
+                        'contents': attachments
+                    } 
+
+
+                    s3_path = f"attachments/{content_id}.pkl" 
+
+                    metadata['attachments'] = True  
+                    metadata['attachments_s3_path'] = s3_path   
+
+                    # upload attachments to s3 
+                    s3.upload_file_to_s3(
+                        data=attachment_data, 
+                        path='attachments/', 
+                        fname=content_id, 
+                        file_type='pkl'
+                    )
+
+                    st.success("Attachments saved")
+
+                else: 
+                    metadata['attachments'] = False 
+
+
+                    #st.write(dir(f))
+    #                    pdf_display = f'<iframe src="data:application/pdf;base64,{f.read()}" width="800" height="800" type="application/pdf"></iframe>'
+    #                    st.markdown(pdf_display, unsafe_allow_html=True) 
+
+    #                    st.download_button(label="Download PDF Tutorial", 
+    #                        data=f.read(),
+    #                        file_name="pandas-clean-id-column.pdf",
+    #                        mime=check_file_type(f))
+
+                if text_upload:   
+
+
+                    st.write("**Content**: ", user_text) 
+
+                    metadata['topic'] = text_topic.lower()
+
+                    user_text = f"The topic of this text is about: {text_topic}\n\n" + user_text
+
+                    with st.spinner("Turning text into numbers..."):
+                        if chunkify_text: 
+                            chunks = split_docs(user_text)   
+
+                            cid = content_id 
+                            i = 1
+                            for chunk in chunks:       
+
+                                user_text = f"The topic of this text is about: {doc_topic}\n\n" + chunk 
+                                em.embed_and_save(content_id=cid, text=user_text, metadata=metadata, aws=True)  
+                                cid = helpers.get_id()  
+
+                                st.success(f"saved chunk {i}")
+                                i +=1 
+
+                        else:
+                            # saves to pinecone AND s3
+                            em.embed_and_save(content_id=content_id, text=user_text, metadata=metadata, aws=True) 
+
+                    st.success("Success! Your input has been uploaded to the system")  
+
+                if doc_upload:   
+
+                    metadata['topic'] = doc_topic.lower()
+
+                    file_type = check_file_type(user_doc)
+                    st.write(f"{file_type} document found") 
+
+                    if file_type == 'text/plain': 
+                        parsed = parse_txt(user_doc)   
+
+                        if chunkify:
+                            chunks = split_docs(parsed)  
+
+                            cid = content_id 
+                            i = 1
+                            for chunk in chunks:       
+
+                                user_text = f"The topic of this text is about: {doc_topic}\n\n" + chunk 
+                                em.embed_and_save(content_id=cid, text=user_text, metadata=metadata, aws=True)  
+                                cid = helpers.get_id()  
+
+                                st.success(f"saved chunk {i}")
+                                i +=1  
+
+                            st.success("**Success**, entire document saved")
+
+                        else:  
+
+                            user_text = f"The topic of this text is about: {doc_topic}\n\n" + parsed
+
+                            em.embed_and_save(content_id=content_id, text=user_text, metadata=metadata, aws=True) 
+                            st.success("text embedded and saved")
+
             else: 
-                metadata['attachments'] = False 
-                
-                
-                #st.write(dir(f))
-#                    pdf_display = f'<iframe src="data:application/pdf;base64,{f.read()}" width="800" height="800" type="application/pdf"></iframe>'
-#                    st.markdown(pdf_display, unsafe_allow_html=True) 
-                    
-#                    st.download_button(label="Download PDF Tutorial", 
-#                        data=f.read(),
-#                        file_name="pandas-clean-id-column.pdf",
-#                        mime=check_file_type(f))
-
-            if text_upload:   
-        
-                
-                st.write("**Content**: ", user_text) 
-                
-                metadata['topic'] = text_topic.lower()
-                
-                user_text = f"The topic of this text is about: {text_topic}\n\n" + user_text
-
-                with st.spinner("Turning text into numbers..."):
-                    if chunkify_text: 
-                        chunks = split_docs(user_text)   
-                        
-                        cid = content_id 
-                        i = 1
-                        for chunk in chunks:       
-                            
-                            user_text = f"The topic of this text is about: {doc_topic}\n\n" + chunk 
-                            em.embed_and_save(content_id=cid, text=user_text, metadata=metadata, aws=True)  
-                            cid = helpers.get_id()  
-                            
-                            st.success(f"saved chunk {i}")
-                            i +=1 
-                        
-                    else:
-                        # saves to pinecone AND s3
-                        em.embed_and_save(content_id=content_id, text=user_text, metadata=metadata, aws=True) 
-
-                st.success("Success! Your input has been uploaded to the system")  
-                
-            if doc_upload:   
-                
-                metadata['topic'] = doc_topic.lower()
-                 
-                file_type = check_file_type(user_doc)
-                st.write(f"{file_type} document found") 
-                
-                if file_type == 'text/plain': 
-                    parsed = parse_txt(user_doc)   
-                    
-                    if chunkify:
-                        chunks = split_docs(parsed)  
-                        
-                        cid = content_id 
-                        i = 1
-                        for chunk in chunks:       
-                            
-                            user_text = f"The topic of this text is about: {doc_topic}\n\n" + chunk 
-                            em.embed_and_save(content_id=cid, text=user_text, metadata=metadata, aws=True)  
-                            cid = helpers.get_id()  
-                            
-                            st.success(f"saved chunk {i}")
-                            i +=1  
-                        
-                        st.success("**Success**, entire document saved")
-                        
-                    else:  
-                        
-                        user_text = f"The topic of this text is about: {doc_topic}\n\n" + parsed
-                        
-                        em.embed_and_save(content_id=content_id, text=user_text, metadata=metadata, aws=True) 
-                        st.success("text embedded and saved")
-                
-        else: 
-            st.error("Invalid password")
+                st.error("Invalid password")
             
             
         
+             
+with modify_tab: 
+    
+    with st.form(key='modify-form'): 
         
+        content_query = st.text_input("Search content") 
         
-        
+        st.form_submit_button("Search")
+    
