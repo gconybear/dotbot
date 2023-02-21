@@ -1,0 +1,78 @@
+import streamlit as st  
+import openai 
+
+
+from embed import Embedder 
+import LLM_PARAMS
+
+
+class AI: 
+    
+    def __init__(self, index): 
+        
+        openai.api_key = st.secrets['OPEN_AI_KEY'] 
+        
+        self.index = index 
+        
+    def get_embedding(self, text: str, model: str=LLM_PARAMS.EMBEDDING_MODEL) -> list[float]:
+        
+        result = openai.Embedding.create(
+          model=model,
+          input=text
+        )
+        return result["data"][0]["embedding"]
+    
+    def nearest_docs(self, V: list[float], K=10):  
+        
+        "finds the nearest docs given an embedding"
+        
+        return self.index.query([V], top_k=K, include_metadata=True)
+    
+    def embed_and_get_closest_docs(self, Q: str): 
+        
+        v = self.get_embedding(Q) 
+        print('computed embedding --> ', v)
+        docs = self.nearest_docs(v)  
+        print(docs)
+        
+        return docs.to_dict() 
+    
+    def construct_prompt(self, Q: str, header=LLM_PARAMS.PROMPT_HEADERS[0], return_docs=False): 
+        
+        docs = self.embed_and_get_closest_docs(Q)  
+        
+        print(docs.keys())
+        
+        MAX_LEN = 500  
+        SEPARATOR = "\n* " 
+        
+        current_len = len(header.split()) 
+        
+        sections = []
+        while current_len < MAX_LEN: 
+            for doc in docs['matches']:  
+                print(doc)
+                print(doc.keys())
+                token_count = len(doc['metadata']['text'].split()) 
+                if token_count <= (MAX_LEN - current_len): 
+                    sections.append(SEPARATOR + doc['metadata']['text'].replace("\n", " "))  
+                    current_len += token_count
+                else: 
+                    pass  
+            break  
+        
+        if return_docs: 
+            return header + "".join(sections) + "\n\n Q: " + Q + "\n A:", docs 
+        else: 
+            return header + "".join(sections) + "\n\n Q: " + Q + "\n A:"
+    
+    def answer(self, prompt, COMPLETIONS_API_PARAMS=LLM_PARAMS.COMPLETIONS_API_PARAMS): 
+
+        response = openai.Completion.create(
+            prompt=prompt,
+            **COMPLETIONS_API_PARAMS
+        )
+
+        return response["choices"][0]["text"].strip(" \n")
+        
+        
