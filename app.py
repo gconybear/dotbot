@@ -166,7 +166,7 @@ with input_tab:
         if not first_and_last_check: 
             st.error("Please submit a first **and** last name")
         
-        all_checks_passed = upload_check & topic_check & content_check & name_check
+        all_checks_passed = upload_check & topic_check & content_check & name_check & first_and_last_check
          
         if all_checks_passed:
             password_valid = helpers.password_authenticate(password)
