@@ -316,7 +316,30 @@ with view_content_tab:
     with st.expander("Text Search"):
         content_query = st.text_input("Search content") 
 
-        search_content = st.button("Search") 
+        search_content = st.button("Search")  
+        
+    with st.expander("Most Recent Uploads"): 
+        
+        n_results = st.slider("N most recent", min_value=5, max_value=50, value=10) 
+        
+        recent_uploads_search = st.button("Seach") 
+        
+    if recent_uploads_search: 
+        with st.spinner("Pulling recent uploads"): 
+            s3 = S3().s3
+            res = helpers.get_most_recent_db_submissions(s3, n_results) 
+            
+            i = 1
+            for doc in res:  
+                st.markdown(f"<u>**Document {i}** - {doc['metadata'].get('topic', '')}</u>", unsafe_allow_html=True) 
+                st.markdown(f"**Content ID** (copy ID below to use in modify tab)" ) #--> **:red[{d['id']}]**  
+                st.code(f"{doc['content_id']}", None)
+                st.markdown(f"Submitted by: {doc['metadata']['submitted_by']} | {doc['upload_time']}")
+                with st.expander(f"document {i} text"): 
+                    st.markdown(f"<i>{doc['content']}</i>", unsafe_allow_html=True)    
+                i += 1 
+                blank()
+            
         
     if search_content:  
         
@@ -333,13 +356,14 @@ with view_content_tab:
             with st.expander(f"document {i} text"):
                 st.markdown(f"{d['metadata']['text']}\n\n", unsafe_allow_html=True)  
                 i += 1 
+            blank()
 
                 
 with modify_tab:  
         
     with st.form('modify-form'):  
         c1, c2 = st.columns(2)
-        content_id = c1.text_input("Content ID")  
+        content_id = c1.text_input("Content ID", help="get this from the 'view content' tab")  
         modification = c2.selectbox("Modification", ['Delete', 'View']) 
         
         st.markdown("------")
@@ -355,7 +379,10 @@ with modify_tab:
             if modification == 'Delete': 
                 st.info("Deleting content...")
                 index.delete(ids=[content_id.strip()])  
-                st.success("Content has been removed") 
+                st.success("Content has been removed")  
+            
+            if modification == 'View': 
+                st.info("Section under construction")
                 
         else: 
             st.error("Invalid Password")
