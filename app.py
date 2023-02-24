@@ -2,6 +2,7 @@ import streamlit as st
 import time 
 import openai  
 import pinecone
+import numpy as np 
 
 from ui_options import tag_options  
 from embed import Embedder 
@@ -53,7 +54,7 @@ st.header("DotBot 🤖")
 #st.markdown(hide_st_style, unsafe_allow_html=True)
 
 
-ask_tab, input_tab, modify_tab = st.tabs(['ChatDB', 'Submit Content', 'View Content'])
+ask_tab, input_tab, view_content_tab, modify_tab = st.tabs(['ChatDB', 'Submit Content', 'View Content', 'Modify Content'])
 
 with ask_tab:    
     
@@ -74,14 +75,39 @@ with ask_tab:
                 prompt, docs = ai.construct_prompt(query, return_docs=True) 
                 answer = ai.answer(prompt)
 
-            #st.markdown("**Answer**: i don't know yet :(") 
-            with st.expander("Prompt"):
-                st.write(prompt)  
+            #st.markdown("**Answer**: i don't know yet :(")  
             
-            with st.expander("Documents"): 
-                st.write(docs)
-                
-            st.write(answer)
+#            with st.expander("Documents"):  
+#                
+#                has_attachments = False 
+##                with st.expander("1"): 
+##                    blank()
+#                st.write(docs)  
+                    
+            
+            st.markdown(f"**DB**: {answer}")   
+            blank() 
+            st.markdown("----") 
+            i = 1
+            for d in docs['matches']: 
+                with st.expander(f"Document {i} -- {d['metadata']['topic']} -- **{round(d['score'] * 100, 2)}%** match"): 
+                    st.markdown(f"**Content**: <i>{d['metadata']['text']}</i>", unsafe_allow_html=True) 
+                    st.markdown(f"**Tags**: *{', '.join(d['metadata']['tags'])}*") 
+                    st.markdown(f"**Submitted by**: *{d['metadata']['submitted_by']}*")
+                    i += 1
+            for d in docs['matches']: 
+                if d['metadata'].get('attachments', False):  
+                    # grab the s3 path and make call 
+                    
+                    # display as download button  
+                    st.write(d['metadata'])
+                    
+#                        st.download_button(label=d[''], 
+#                            data=f.read(),
+#                            file_name="pandas-clean-id-column.pdf",
+#                            mime=check_file_type(f))
+            with st.expander("Prompt"):
+                st.write(prompt) 
     
 with input_tab: 
     with st.form(key='submit-form'):  
@@ -156,6 +182,8 @@ with input_tab:
                     'doc_upload': doc_upload, 
                     'tags': tags, 
                     'submitted_by': name, 
+                    'date': str(np.datetime64('today')), 
+                    'timestamp': str(np.datetime64('now'))
                 }
 
 
@@ -232,10 +260,24 @@ with input_tab:
 
                     file_type = check_file_type(user_doc)
                     st.write(f"{file_type} document found") 
-
+                    
+                    doc_parsed = False
                     if file_type == 'text/plain': 
                         parsed = parse_txt(user_doc)   
-
+                        doc_parsed = True
+                    
+                    if file_type == 'application/pdf': 
+                        
+                        parsed = parse_pdf(user_doc) 
+                        doc_parsed = True
+                    
+                    if file_type == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+                        
+                        parsed = parse_docx(user_doc) 
+                        doc_parsed = True
+                    
+                    
+                    if doc_parsed:
                         if chunkify:
                             chunks = split_docs(parsed)  
 
@@ -257,7 +299,9 @@ with input_tab:
                             user_text = f"The topic of this text is about: {doc_topic}\n\n" + parsed
 
                             em.embed_and_save(content_id=content_id, text=user_text, metadata=metadata, aws=True) 
-                            st.success("text embedded and saved")
+                            st.success("text embedded and saved") 
+                            
+                    
 
             else: 
                 st.error("Invalid password")
@@ -265,11 +309,53 @@ with input_tab:
             
         
              
-with modify_tab: 
+with view_content_tab: 
     
-    with st.form(key='modify-form'): 
-        
+#    with st.form(key='-form'): 
+    
+    with st.expander("Text Search"):
         content_query = st.text_input("Search content") 
+
+        search_content = st.button("Search") 
         
-        st.form_submit_button("Search")
-    
+    if search_content:  
+        
+        with st.spinner("Finding content"):
+            ai = AI(index) 
+            docs = ai.embed_and_get_closest_docs(content_query) 
+        
+        i = 1
+        for d in docs['matches']:  
+            st.markdown(f"<u>**Document {i}**</u>", unsafe_allow_html=True) 
+            st.markdown(f"**Content ID** (copy ID below to use in modify tab)" ) #--> **:red[{d['id']}]**  
+            st.code(f"{d['id']}", None)
+            st.markdown(f"Submitted by: {d['metadata']['submitted_by']}")
+            with st.expander(f"document {i} text"):
+                st.markdown(f"{d['metadata']['text']}\n\n", unsafe_allow_html=True)  
+                i += 1 
+
+                
+with modify_tab:  
+        
+    with st.form('modify-form'):  
+        c1, c2 = st.columns(2)
+        content_id = c1.text_input("Content ID")  
+        modification = c2.selectbox("Modification", ['Delete', 'View']) 
+        
+        st.markdown("------")
+        psswrd = st.text_input("Password")
+        modify = st.form_submit_button("Make modification") 
+        
+    if modify: 
+        
+        password_valid = helpers.password_authenticate(psswrd)
+        
+        if password_valid:  
+            
+            if modification == 'Delete': 
+                st.info("Deleting content...")
+                index.delete(ids=[content_id.strip()])  
+                st.success("Content has been removed") 
+                
+        else: 
+            st.error("Invalid Password")
