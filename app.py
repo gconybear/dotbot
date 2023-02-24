@@ -160,7 +160,11 @@ with input_tab:
         if not (topic_check & content_check): 
             st.error("Make sure you inputted a **topic** and **content** to the system")
             
-        name_check = name != '' 
+        name_check = name != ''  
+        first_and_last_check = len(name.split()) >= 2
+        
+        if not first_and_last_check: 
+            st.error("Please submit a first **and** last name")
         
         all_checks_passed = upload_check & topic_check & content_check & name_check
          
