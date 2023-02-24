@@ -90,10 +90,10 @@ with ask_tab:
             st.markdown("----") 
             i = 1
             for d in docs['matches']: 
-                with st.expander(f"Document {i} -- {d['metadata']['topic']} -- **{round(d['score'] * 100, 2)}%** match"): 
+                with st.expander(f"Document {i} -- {d['metadata'].get('topic', 'no topic listed')} -- **{round(d['score'] * 100, 2)}%** match"): 
                     st.markdown(f"**Content**: <i>{d['metadata']['text']}</i>", unsafe_allow_html=True) 
                     st.markdown(f"**Tags**: *{', '.join(d['metadata']['tags'])}*") 
-                    st.markdown(f"**Submitted by**: *{d['metadata']['submitted_by']}*")
+                    st.markdown(f"**Submitted by**: *{d['metadata']['submitted_by']} {d['metadata'].get('date')}*")
                     i += 1
             for d in docs['matches']: 
                 if d['metadata'].get('attachments', False):  
