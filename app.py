@@ -335,7 +335,7 @@ with view_content_tab:
             
             i = 1
             for doc in res:  
-                st.markdown(f"<u>**Document {i}** - {doc['metadata'].get('topic', '')}</u>", unsafe_allow_html=True) 
+                st.markdown(f"<u>**:blue[Document {i}]** - {doc['metadata'].get('topic', '')}</u>", unsafe_allow_html=True) 
                 st.markdown(f"**Content ID** (copy ID below to use in modify tab)" ) #--> **:red[{d['id']}]**  
                 st.code(f"{doc['content_id']}", None)
                 st.markdown(f"Submitted by: {doc['metadata']['submitted_by']} | {doc['upload_time']}")
@@ -353,7 +353,7 @@ with view_content_tab:
         
         i = 1
         for d in docs['matches']:  
-            st.markdown(f"<u>**Document {i}**</u>", unsafe_allow_html=True) 
+            st.markdown(f"<u>**:blue[Document {i}]** - {d['metadata'].get('topic', '')}</u>", unsafe_allow_html=True) 
             st.markdown(f"**Content ID** (copy ID below to use in modify tab)" ) #--> **:red[{d['id']}]**  
             st.code(f"{d['id']}", None)
             st.markdown(f"Submitted by: {d['metadata']['submitted_by']}")
