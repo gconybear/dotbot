@@ -37,7 +37,7 @@ class AI:
         
         return docs.to_dict() 
     
-    def construct_prompt(self, Q: str, header=LLM_PARAMS.PROMPT_HEADERS[3], return_docs=False): 
+    def construct_prompt(self, Q: str, header=LLM_PARAMS.PROMPT_HEADERS[4], return_docs=False): 
         
         docs = self.embed_and_get_closest_docs(Q)  
         
