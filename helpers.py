@@ -33,4 +33,7 @@ def password_authenticate(password):
     if password == st.secrets['super_admin_password']: 
         return True 
     
+    if password == st.secrets['super_admin_password1']: 
+        return True
+    
     return False 
