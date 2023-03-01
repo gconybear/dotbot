@@ -5,6 +5,7 @@ import openai
 from embed import Embedder 
 import LLM_PARAMS
 
+PROMPT_KEY = 6
 
 class AI: 
     
@@ -37,7 +38,12 @@ class AI:
         
         return docs.to_dict() 
     
-    def construct_prompt(self, Q: str, header=LLM_PARAMS.PROMPT_HEADERS[4], return_docs=False): 
+    def construct_prompt(self, Q: str, header=LLM_PARAMS.PROMPT_HEADERS[PROMPT_KEY], return_docs=False, personality='standard'):  
+        
+        if personality != 'standard': 
+            header=LLM_PARAMS.PROMPT_HEADERS[6].format(personality, personality, personality) 
+        else: 
+            header=LLM_PARAMS.PROMPT_HEADERS[5]
         
         docs = self.embed_and_get_closest_docs(Q)  
         

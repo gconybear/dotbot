@@ -10,6 +10,7 @@ from generate_response import AI
 import helpers 
 from doc_parsing import parse_docx, parse_pdf, parse_txt, check_file_type, split_docs 
 from aws_connect import S3
+from LLM_PARAMS import personalities
 
 ##6d95b0 90b7d1 
 textColor="#6d95b0" 
@@ -60,7 +61,8 @@ with ask_tab:
     
     with st.form(key='chat-form'):
         #st.markdown("ChatDB")
-        query = st.text_input("Input query", placeholder='Ask me anything...')  
+        query = st.text_input("Input query", placeholder='Ask me anything...')   
+        personality = st.selectbox("Personality", ['standard'] + sorted(personalities))
         ask = st.form_submit_button("ask")
     
     if ask:
@@ -72,7 +74,7 @@ with ask_tab:
                 ai = AI(index) 
 
                 #docs = ai.embed_and_get_closest_docs(query)  
-                prompt, docs = ai.construct_prompt(query, return_docs=True) 
+                prompt, docs = ai.construct_prompt(query, return_docs=True, personality=personality) 
                 answer = ai.answer(prompt)
 
             #st.markdown("**Answer**: i don't know yet :(")  
