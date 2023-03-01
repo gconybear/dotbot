@@ -1,7 +1,7 @@
 MAX_SECTION_LEN = 500
 SEPARATOR = "\n* "
 ENCODING = "cl100k_base"  # encoding for text-embedding-ada-002 
-COMPLETIONS_MODEL = "text-davinci-003"
+COMPLETIONS_MODEL = "gpt-3.5-turbo" # "text-davinci-003"
 EMBEDDING_MODEL = "text-embedding-ada-002"   
 
 EMBEDDING_LEN = 1536

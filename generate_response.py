@@ -66,13 +66,29 @@ class AI:
         else: 
             return header + "".join(sections) + "\n\n Q: " + Q + "\n A:"
     
-    def answer(self, prompt, COMPLETIONS_API_PARAMS=LLM_PARAMS.COMPLETIONS_API_PARAMS): 
+    def answer(self, prompt, COMPLETIONS_API_PARAMS=LLM_PARAMS.COMPLETIONS_API_PARAMS):  
+        
+        if LLM_PARAMS.COMPLETIONS_MODEL == "gpt-3.5-turbo": 
+            
+            #st.info("Using ChatGPT API")
+            
+            response = openai.ChatCompletion.create(
+              model="gpt-3.5-turbo", 
+              messages=[{"role": "user", "content": prompt}]
+            ) 
+            
+            return response['choices'][0]['message']['content'].strip(' \n') 
+        
+        else:
 
-        response = openai.Completion.create(
-            prompt=prompt,
-            **COMPLETIONS_API_PARAMS
-        )
+            response = openai.Completion.create(
+                prompt=prompt,
+                **COMPLETIONS_API_PARAMS
+            )
 
-        return response["choices"][0]["text"].strip(" \n")
+            return response["choices"][0]["text"].strip(" \n")
+        
+        
+        
         
         
