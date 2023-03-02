@@ -29,7 +29,9 @@ PROMPT_HEADERS = {
 } 
 
 
-personalities = ['borat', 'lousy comedian', 'yoda',  
-                 'abraham lincoln', 'midwestern farmer', 
-                 'mafia boss', 'california surfer bro', 
-                 'dory from finding nemo', 'dr. suess', 'colorado ski bum', 'texas cowboy']
+personalities = [ 'mafia boss',  'dr. suess', 'colorado ski bum', 'texas cowboy'] 
+#
+#personalities = ['borat', 'lousy comedian', 'yoda',  
+#                 'abraham lincoln', 'midwestern farmer', 
+#                 'mafia boss', 'california surfer bro', 
+#                 'dory from finding nemo', 'dr. suess', 'colorado ski bum', 'texas cowboy']
