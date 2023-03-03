@@ -89,13 +89,19 @@ with ask_tab:
             
             st.markdown(f"**DB**: {answer}")   
             blank() 
-            st.markdown("----") 
+            st.markdown("----")   
+            st.markdown("**References** – DotBot used these to come up with the answer above") 
+            blank()
+            MAX_DOCS_TO_SHOW = 5
             i = 1
-            for d in docs['matches']: 
-                with st.expander(f"Document {i} -- {d['metadata'].get('topic', 'no topic listed')} -- **{round(d['score'] * 100, 2)}%** match"): 
-                    st.markdown(f"**Content**: <i>{d['metadata']['text']}</i>", unsafe_allow_html=True) 
-                    st.markdown(f"**Tags**: *{', '.join(d['metadata']['tags'])}*") 
-                    st.markdown(f"**Submitted by**: *{d['metadata']['submitted_by']} {d['metadata'].get('date')}*")
+            for d in docs['matches']:  
+                if i > 5: 
+                    break 
+                    
+                with st.expander(f"**{i}**. {d['metadata'].get('topic', 'no topic listed')} -- **{round(d['score'] * 100, 2)}%** match"): # Document {i} --
+                    st.markdown(f"**Content**: {d['metadata']['text']}", unsafe_allow_html=True) 
+                    st.markdown(f"**Tags**: {', '.join(d['metadata']['tags']) if len(d['metadata']['tags']) > 0 else 'no tags submitted'}") 
+                    st.markdown(f"**Submitted by**: {d['metadata']['submitted_by']} {d['metadata'].get('date', '')}")
                     i += 1
             for d in docs['matches']: 
                 if d['metadata'].get('attachments', False):  
@@ -108,6 +114,7 @@ with ask_tab:
 #                            data=f.read(),
 #                            file_name="pandas-clean-id-column.pdf",
 #                            mime=check_file_type(f))
+            st.markdown('---') 
             with st.expander("Prompt"):
                 st.write(prompt) 
     
@@ -326,7 +333,7 @@ with view_content_tab:
         
     with st.expander("Most Recent Uploads"): 
         
-        n_results = st.slider("N most recent", min_value=5, max_value=50, value=10) 
+        n_results = st.slider("N most recent", min_value=5, max_value=50, value=5) 
         
         recent_uploads_search = st.button("Seach") 
         
