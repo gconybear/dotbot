@@ -362,8 +362,9 @@ with view_content_tab:
         
         i = 1
         for d in docs['matches']:  
-            st.markdown(f"<u>**:blue[Document {i}]** - {d['metadata'].get('topic', '')}</u>", unsafe_allow_html=True) 
-            st.markdown(f"**Content ID** (copy ID below to use in modify tab)" ) #--> **:red[{d['id']}]**  
+            st.markdown(f"<u>**:blue[Document {i}]**</u>", unsafe_allow_html=True) #  - {d['metadata'].get('topic', '')}
+            st.markdown(f"**Topic name**: {d['metadata'].get('topic', '')}" )
+            st.markdown(f"**Content ID**: (copy ID below to use in modify tab)" ) #--> **:red[{d['id']}]**  
             st.code(f"{d['id']}", None)
             st.markdown(f"Submitted by: {d['metadata']['submitted_by']}")
             with st.expander(f"document {i} text"):
@@ -374,10 +375,12 @@ with view_content_tab:
                 
 with modify_tab:  
         
-    with st.form('modify-form'):  
-        c1, c2 = st.columns(2)
-        content_id = c1.text_input("Content ID", help="get this from the 'view content' tab")  
-        modification = c2.selectbox("Modification", ['Delete', 'View']) 
+    with st.form('modify-form'):   
+        with st.expander("Delete by Content ID"):
+            content_id = st.text_input("Content ID", help="get this from the 'view content' tab")   
+        
+        with st.expander("Bulk Delete"): 
+            topic_name = st.text_input("Delete by topic name")
         
         st.markdown("------")
         psswrd = st.text_input("Password")
@@ -387,12 +390,28 @@ with modify_tab:
         
         password_valid = helpers.password_authenticate(psswrd)
         
+        modification = 'Delete' # remove this... 
+
+        content_id_delete = len(content_id) > 1 
+        topic_delete = len(topic_name) > 1
+
         if password_valid:  
             
             if modification == 'Delete': 
-                st.info("Deleting content...")
-                index.delete(ids=[content_id.strip()])  
-                st.success("Content has been removed")  
+                st.info("Deleting content...") 
+                if content_id_delete:  
+                    st.info("Deleting by content ID")
+                    index.delete(ids=[content_id.strip()])  
+                    st.success("Content has been removed")   
+
+                if topic_delete: 
+                    st.info("Bulk delete by topic name") 
+                    #metadata['topic'] = text_topic.lower() 
+                    index.delete(
+                        filter={
+                            "topic": {"$eq": topic_name.lower().strip()}                        }
+                    )
+                    st.success("Content has been removed") 
             
             if modification == 'View': 
                 st.info("Section under construction")
