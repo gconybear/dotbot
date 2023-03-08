@@ -78,7 +78,7 @@ with ask_tab:
                 refresh_chat = st.button("Refresh Chat") 
 
                 if refresh_chat: 
-                    del st.session_state['convo']
+                    st.cache_data.clear()
 
         if len(query) > 1: 
             st.caption(f"**You**: {query}")   
