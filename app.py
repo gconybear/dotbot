@@ -10,7 +10,17 @@ from generate_response import AI
 import helpers 
 from doc_parsing import parse_docx, parse_pdf, parse_txt, check_file_type, split_docs 
 from aws_connect import S3
-from LLM_PARAMS import personalities
+from LLM_PARAMS import personalities 
+
+
+st.set_page_config(
+    page_title="DotBot",
+    page_icon= "🤖",
+    #layout= "wide",
+    layout="centered",
+    initial_sidebar_state="collapsed",
+    menu_items = None
+)
 
 ##6d95b0 90b7d1 
 textColor="#6d95b0" 
@@ -36,11 +46,20 @@ def get_index():
 #    
 #    idx = get_index()
 #    
-#    return AI()
+#    return AI() 
 
 index = get_index() 
 
-# ----- APP -----  
+# ----- APP -----   
+
+
+master_password = st.sidebar.text_input("Password / PIN") 
+
+if helpers.password_authenticate(master_password): 
+    st.session_state['valid_password'] = True 
+else:  
+    st.warning("Invalid credentials – use sidebar to enter valid PIN or password")
+    st.session_state['valid_password'] = False 
 
 
 st.header("DotBot 🤖")  
@@ -65,83 +84,87 @@ with ask_tab:
         personality = st.selectbox("Personality", ['standard'] + sorted(personalities))
         ask = st.form_submit_button("ask")
     
-    if ask:  
+    if ask:   
 
-        if 'convo' in st.session_state:  
-            with st.expander("Chat History"):
-                for c in st.session_state['convo']: 
-                    if c['role'] == 'user': 
-                        st.caption(f"**You**: {c['query']}") 
-                    if c['role'] == 'assistant': 
-                        st.markdown(f"**DB**: {c['content']}") 
-                blank()
-                refresh_chat = st.button("Refresh Chat") 
+        if st.session_state['valid_password']: 
 
-                if refresh_chat: 
-                    st.cache_data.clear()
-
-        if len(query) > 1: 
-            st.caption(f"**You**: {query}")   
-            with st.spinner("Computing response"): 
-
-                ai = AI(index) 
-
-                #docs = ai.embed_and_get_closest_docs(query)  
-                prompt, docs = ai.construct_prompt(query, return_docs=True, personality=personality)  
-
-                if 'convo' in st.session_state:  
-                    answer = ai.answer(prompt, history=st.session_state['convo'])  
-                else:
-                    answer = ai.answer(prompt)
-
-            #st.markdown("**Answer**: i don't know yet :(")  
-            
-#            with st.expander("Documents"):  
-#                
-#                has_attachments = False 
-##                with st.expander("1"): 
-##                    blank()
-#                st.write(docs)  
-                    
-            
-            st.markdown(f"**DB**: {answer}")   
-            blank() 
-            st.markdown("----")   
-            st.markdown("**References** – DotBot used these to come up with the answer above")   
-            if 'convo' not in st.session_state: 
-                st.session_state['convo'] = [{'role': 'user', 'query': query, 'content': prompt}, 
-                                             {'role': 'assistant', 'content': answer}]  
-            else: 
-                st.session_state['convo'].append({'role': 'user', 'query': query, 'content': prompt}) 
-                st.session_state['convo'].append({'role': 'assistant', 'content': answer}) 
-
-            blank()
-            MAX_DOCS_TO_SHOW = 5
-            i = 1
-            for d in docs['matches']:  
-                if i > 5: 
-                    break 
-                    
-                with st.expander(f"**{i}**. {d['metadata'].get('topic', 'no topic listed')} -- **{round(d['score'] * 100, 2)}%** match"): # Document {i} --
-                    st.markdown(f"**Content**: {d['metadata']['text']}", unsafe_allow_html=True) 
-                    st.markdown(f"**Tags**: {', '.join(d['metadata']['tags']) if len(d['metadata']['tags']) > 0 else 'no tags submitted'}") 
-                    st.markdown(f"**Submitted by**: {d['metadata']['submitted_by']} {d['metadata'].get('date', '')}")
-                    i += 1
-            for d in docs['matches']: 
-                if d['metadata'].get('attachments', False):  
-                    # grab the s3 path and make call 
-                    
-                    # display as download button  
-                    #st.write(d['metadata']) 
+            if 'convo' in st.session_state:  
+                with st.expander("Chat History"):
+                    for c in st.session_state['convo']: 
+                        if c['role'] == 'user': 
+                            st.caption(f"**You**: {c['query']}") 
+                        if c['role'] == 'assistant': 
+                            st.markdown(f"**DB**: {c['content']}") 
                     blank()
-                    
-#                        st.download_button(label=d[''], 
-#                            data=f.read(),
-#                            file_name="pandas-clean-id-column.pdf",
-#                            mime=check_file_type(f))
-            st.markdown('---') 
-            with st.expander("Prompt"):
-                st.write(prompt) 
+                    refresh_chat = st.button("Refresh Chat") 
+
+                    if refresh_chat: 
+                        st.cache_data.clear()
+
+            if len(query) > 1: 
+                st.caption(f"**You**: {query}")   
+                with st.spinner("Computing response"): 
+
+                    ai = AI(index) 
+
+                    #docs = ai.embed_and_get_closest_docs(query)  
+                    prompt, docs = ai.construct_prompt(query, return_docs=True, personality=personality)  
+
+                    if 'convo' in st.session_state:  
+                        answer = ai.answer(prompt, history=st.session_state['convo'])  
+                    else:
+                        answer = ai.answer(prompt)
+
+                #st.markdown("**Answer**: i don't know yet :(")  
+                
+    #            with st.expander("Documents"):  
+    #                
+    #                has_attachments = False 
+    ##                with st.expander("1"): 
+    ##                    blank()
+    #                st.write(docs)  
+                        
+                
+                st.markdown(f"**DB**: {answer}")   
+                blank() 
+                st.markdown("----")   
+                st.markdown("**References** – DotBot used these to come up with the answer above")   
+                if 'convo' not in st.session_state: 
+                    st.session_state['convo'] = [{'role': 'user', 'query': query, 'content': prompt}, 
+                                                {'role': 'assistant', 'content': answer}]  
+                else: 
+                    st.session_state['convo'].append({'role': 'user', 'query': query, 'content': prompt}) 
+                    st.session_state['convo'].append({'role': 'assistant', 'content': answer}) 
+
+                blank()
+                MAX_DOCS_TO_SHOW = 5
+                i = 1
+                for d in docs['matches']:  
+                    if i > 5: 
+                        break 
+                        
+                    with st.expander(f"**{i}**. {d['metadata'].get('topic', 'no topic listed')} -- **{round(d['score'] * 100, 2)}%** match"): # Document {i} --
+                        st.markdown(f"**Content**: {d['metadata']['text']}", unsafe_allow_html=True) 
+                        st.markdown(f"**Tags**: {', '.join(d['metadata']['tags']) if len(d['metadata']['tags']) > 0 else 'no tags submitted'}") 
+                        st.markdown(f"**Submitted by**: {d['metadata']['submitted_by']} {d['metadata'].get('date', '')}")
+                        i += 1
+                for d in docs['matches']: 
+                    if d['metadata'].get('attachments', False):  
+                        # grab the s3 path and make call 
+                        
+                        # display as download button  
+                        #st.write(d['metadata']) 
+                        blank()
+                        
+    #                        st.download_button(label=d[''], 
+    #                            data=f.read(),
+    #                            file_name="pandas-clean-id-column.pdf",
+    #                            mime=check_file_type(f))
+                st.markdown('---') 
+                with st.expander("Prompt"):
+                    st.write(prompt)  
+        else: 
+            st.error("Invalid credentials – please use sidebar to enter a valid password")
     
 with input_tab: 
     with st.form(key='submit-form'):  
