@@ -49,7 +49,7 @@ class AI:
         
         print(docs.keys())
         
-        MAX_LEN = 750  
+        MAX_LEN = 1000  
         SEPARATOR = "\n* " 
         
         current_len = len(header.split()) 
