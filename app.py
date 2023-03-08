@@ -53,7 +53,10 @@ index = get_index()
 # ----- APP -----   
 
 
-master_password = st.sidebar.text_input("Password / PIN") 
+master_password = st.sidebar.text_input("Password / PIN")  
+st.sidebar.text('')
+st.sidebar.text('')
+st.sidebar.image('Untitled.png', width=225)
 
 if helpers.password_authenticate(master_password): 
     st.session_state['valid_password'] = True 
