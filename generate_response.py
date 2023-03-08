@@ -72,17 +72,28 @@ class AI:
         else: 
             return header + "".join(sections) + "\n\n Q: " + Q + "\n A:"
     
-    def answer(self, prompt, COMPLETIONS_API_PARAMS=LLM_PARAMS.COMPLETIONS_API_PARAMS):  
+    def answer(self, prompt, COMPLETIONS_API_PARAMS=LLM_PARAMS.COMPLETIONS_API_PARAMS, history=None):  
         
         if LLM_PARAMS.COMPLETIONS_MODEL == "gpt-3.5-turbo": 
             
-            #st.info("Using ChatGPT API")
+            #st.info("Using ChatGPT API") 
+
+            if history is not None:    
+
+                history = [{'role': x['role'], 'content': x.get('query', x['content'])} for x in history] 
+
+                response = openai.ChatCompletion.create(
+                    model="gpt-3.5-turbo", 
+                    messages = history + [{"role": "user", "content": prompt}]
+                    ) 
+                    
+            else:
             
-            response = openai.ChatCompletion.create(
-              model="gpt-3.5-turbo", 
-              messages=[{"role": "user", "content": prompt}]
-            ) 
-            
+                response = openai.ChatCompletion.create(
+                    model="gpt-3.5-turbo", 
+                    messages=[{"role": "user", "content": prompt}]
+                    ) 
+                
             return response['choices'][0]['message']['content'] #.strip(' \n') 
         
         else:

@@ -57,7 +57,7 @@ st.header("DotBot 🤖")
 
 ask_tab, input_tab, view_content_tab, modify_tab = st.tabs(['ChatDB', 'Submit Content', 'View Content', 'Modify Content'])
 
-with ask_tab:    
+with ask_tab:     
     
     with st.form(key='chat-form'):
         #st.markdown("ChatDB")
@@ -65,17 +65,34 @@ with ask_tab:
         personality = st.selectbox("Personality", ['standard'] + sorted(personalities))
         ask = st.form_submit_button("ask")
     
-    if ask:
+    if ask:  
+
+        if 'convo' in st.session_state:  
+            with st.expander("Chat History"):
+                for c in st.session_state['convo']: 
+                    if c['role'] == 'user': 
+                        st.caption(f"**You**: {c['query']}") 
+                    if c['role'] == 'assistant': 
+                        st.markdown(f"**DB**: {c['content']}") 
+                blank()
+                refresh_chat = st.button("Refresh Chat") 
+
+                if refresh_chat: 
+                    del st.session_state['convo']
 
         if len(query) > 1: 
-            st.caption(f"**Query**: {query}")  
+            st.caption(f"**You**: {query}")   
             with st.spinner("Computing response"): 
 
                 ai = AI(index) 
 
                 #docs = ai.embed_and_get_closest_docs(query)  
-                prompt, docs = ai.construct_prompt(query, return_docs=True, personality=personality) 
-                answer = ai.answer(prompt)
+                prompt, docs = ai.construct_prompt(query, return_docs=True, personality=personality)  
+
+                if 'convo' in st.session_state:  
+                    answer = ai.answer(prompt, history=st.session_state['convo'])  
+                else:
+                    answer = ai.answer(prompt)
 
             #st.markdown("**Answer**: i don't know yet :(")  
             
@@ -90,7 +107,14 @@ with ask_tab:
             st.markdown(f"**DB**: {answer}")   
             blank() 
             st.markdown("----")   
-            st.markdown("**References** – DotBot used these to come up with the answer above") 
+            st.markdown("**References** – DotBot used these to come up with the answer above")   
+            if 'convo' not in st.session_state: 
+                st.session_state['convo'] = [{'role': 'user', 'query': query, 'content': prompt}, 
+                                             {'role': 'assistant', 'content': answer}]  
+            else: 
+                st.session_state['convo'].append({'role': 'user', 'query': query, 'content': prompt}) 
+                st.session_state['convo'].append({'role': 'assistant', 'content': answer}) 
+
             blank()
             MAX_DOCS_TO_SHOW = 5
             i = 1
@@ -108,7 +132,8 @@ with ask_tab:
                     # grab the s3 path and make call 
                     
                     # display as download button  
-                    st.write(d['metadata'])
+                    #st.write(d['metadata']) 
+                    blank()
                     
 #                        st.download_button(label=d[''], 
 #                            data=f.read(),
