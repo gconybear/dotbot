@@ -20,7 +20,22 @@ st.set_page_config(
     layout="centered",
     initial_sidebar_state="collapsed",
     menu_items = None
-)
+) 
+
+def show_chat_history():
+    if 'convo' in st.session_state:  
+        with st.expander("Chat History"):
+            for c in st.session_state['convo']: 
+                if c['role'] == 'user': 
+                    st.caption(f"**You**: {c['query']}") 
+                if c['role'] == 'assistant': 
+                    st.markdown(f"**DB**: {c['content']}") 
+            blank()
+            refresh_chat = st.button("Refresh Chat")
+            if refresh_chat: 
+                del st.session_state['convo']  
+                del st.session_state['current_query']
+                st.experimental_rerun() 
 
 ##6d95b0 90b7d1 
 textColor="#6d95b0" 
@@ -53,7 +68,8 @@ index = get_index()
 # ----- APP -----   
 
 
-master_password = st.sidebar.text_input("Password / PIN")  
+master_password = st.sidebar.text_input("Password / PIN")   
+chat_personality = st.sidebar.selectbox("Chat Personality", ['standard'] + sorted(personalities))
 st.sidebar.text('')
 st.sidebar.text('')
 st.sidebar.image('Untitled.png', width=225)
@@ -81,28 +97,22 @@ ask_tab, input_tab, view_content_tab, modify_tab = st.tabs(['ChatDB', 'Submit Co
 
 with ask_tab:     
     
-    with st.form(key='chat-form'):
-        #st.markdown("ChatDB")
-        query = st.text_input("Input query", placeholder='Ask me anything...')   
-        personality = st.selectbox("Personality", ['standard'] + sorted(personalities))
-        ask = st.form_submit_button("ask")
+    # with st.form(key='chat-form'):
+    #     #st.markdown("ChatDB")
+    #     query = st.text_input("Input query", placeholder='Ask me anything...')   
+    #     personality = st.selectbox("Personality", ['standard'] + sorted(personalities))
+    #     ask = st.form_submit_button("ask") 
     
-    if ask:   
+    def clear_query():  
+        st.session_state.current_query = st.session_state.q 
+        st.session_state.q = '' 
+
+    query = st.text_input("", placeholder='Ask me anything...', key='q', on_change=clear_query) 
+    
+    if len(st.session_state.get('current_query', '')) > 2:    
+        query = st.session_state['current_query']
 
         if st.session_state['valid_password']: 
-
-            if 'convo' in st.session_state:  
-                with st.expander("Chat History"):
-                    for c in st.session_state['convo']: 
-                        if c['role'] == 'user': 
-                            st.caption(f"**You**: {c['query']}") 
-                        if c['role'] == 'assistant': 
-                            st.markdown(f"**DB**: {c['content']}") 
-                    blank()
-                    refresh_chat = st.button("Refresh Chat") 
-
-                    if refresh_chat: 
-                        st.cache_data.clear()
 
             if len(query) > 1: 
                 st.caption(f"**You**: {query}")   
@@ -111,7 +121,7 @@ with ask_tab:
                     ai = AI(index) 
 
                     #docs = ai.embed_and_get_closest_docs(query)  
-                    prompt, docs = ai.construct_prompt(query, return_docs=True, personality=personality)  
+                    prompt, docs = ai.construct_prompt(query, return_docs=True, personality=chat_personality)  
 
                     if 'convo' in st.session_state:  
                         answer = ai.answer(prompt, history=st.session_state['convo'])  
@@ -128,8 +138,11 @@ with ask_tab:
     #                st.write(docs)  
                         
                 
-                st.markdown(f"**DB**: {answer}")   
+                st.markdown(f"**DB**: {answer}")    
                 blank() 
+                blank()
+                show_chat_history()
+                #blank() 
                 st.markdown("----")   
                 st.markdown("**References** – DotBot used these to come up with the answer above")   
                 if 'convo' not in st.session_state: 
@@ -165,7 +178,16 @@ with ask_tab:
     #                            mime=check_file_type(f))
                 st.markdown('---') 
                 with st.expander("Prompt"):
-                    st.write(prompt)  
+                    st.write(prompt)   
+
+                blank() 
+                blank()
+                refresh_chat_button = st.button("Refresh Chat ") 
+                if refresh_chat_button:  
+                    del st.session_state['convo']  
+                    del st.session_state['current_query']
+                    st.experimental_rerun()
+                
         else: 
             st.error("Invalid credentials – please use sidebar to enter a valid password")
     
@@ -229,9 +251,8 @@ with input_tab:
         all_checks_passed = upload_check & topic_check & content_check & name_check & first_and_last_check
          
         if all_checks_passed:
-            password_valid = helpers.password_authenticate(password)
 
-            if password_valid:   
+            if st.session_state['valid_password']:   
 
                 # generate content id 
                 content_id = helpers.get_id()   
@@ -388,40 +409,43 @@ with view_content_tab:
         
         recent_uploads_search = st.button("Seach") 
         
-    if recent_uploads_search: 
-        with st.spinner("Pulling recent uploads"): 
-            s3 = S3().s3
-            res = helpers.get_most_recent_db_submissions(s3, n_results) 
+    if recent_uploads_search:  
+        if st.session_state['valid_password']:
+            with st.spinner("Pulling recent uploads"): 
+                s3 = S3().s3
+                res = helpers.get_most_recent_db_submissions(s3, n_results) 
+                
+                i = 1
+                for doc in res:  
+                    st.markdown(f"<u>**:blue[Document {i}]** - {doc['metadata'].get('topic', '')}</u>", unsafe_allow_html=True) 
+                    st.markdown(f"**Content ID** (copy ID below to use in modify tab)" ) #--> **:red[{d['id']}]**  
+                    st.code(f"{doc['content_id']}", None)
+                    st.markdown(f"Submitted by: {doc['metadata']['submitted_by']} | {doc['upload_time']}")
+                    with st.expander(f"document {i} text"): 
+                        st.markdown(f"<i>{doc['content']}</i>", unsafe_allow_html=True)    
+                    i += 1 
+                    blank()
+            
+        
+    if search_content:   
+
+        if st.session_state['valid_password']:
+        
+            with st.spinner("Finding content"):
+                ai = AI(index) 
+                docs = ai.embed_and_get_closest_docs(content_query) 
             
             i = 1
-            for doc in res:  
-                st.markdown(f"<u>**:blue[Document {i}]** - {doc['metadata'].get('topic', '')}</u>", unsafe_allow_html=True) 
-                st.markdown(f"**Content ID** (copy ID below to use in modify tab)" ) #--> **:red[{d['id']}]**  
-                st.code(f"{doc['content_id']}", None)
-                st.markdown(f"Submitted by: {doc['metadata']['submitted_by']} | {doc['upload_time']}")
-                with st.expander(f"document {i} text"): 
-                    st.markdown(f"<i>{doc['content']}</i>", unsafe_allow_html=True)    
-                i += 1 
+            for d in docs['matches']:  
+                st.markdown(f"<u>**:blue[Document {i}]**</u>", unsafe_allow_html=True) #  - {d['metadata'].get('topic', '')}
+                st.markdown(f"**Topic name**: {d['metadata'].get('topic', '')}" )
+                st.markdown(f"**Content ID**: (copy ID below to use in modify tab)" ) #--> **:red[{d['id']}]**  
+                st.code(f"{d['id']}", None)
+                st.markdown(f"Submitted by: {d['metadata']['submitted_by']}")
+                with st.expander(f"document {i} text"):
+                    st.markdown(f"{d['metadata']['text']}\n\n", unsafe_allow_html=True)  
+                    i += 1 
                 blank()
-            
-        
-    if search_content:  
-        
-        with st.spinner("Finding content"):
-            ai = AI(index) 
-            docs = ai.embed_and_get_closest_docs(content_query) 
-        
-        i = 1
-        for d in docs['matches']:  
-            st.markdown(f"<u>**:blue[Document {i}]**</u>", unsafe_allow_html=True) #  - {d['metadata'].get('topic', '')}
-            st.markdown(f"**Topic name**: {d['metadata'].get('topic', '')}" )
-            st.markdown(f"**Content ID**: (copy ID below to use in modify tab)" ) #--> **:red[{d['id']}]**  
-            st.code(f"{d['id']}", None)
-            st.markdown(f"Submitted by: {d['metadata']['submitted_by']}")
-            with st.expander(f"document {i} text"):
-                st.markdown(f"{d['metadata']['text']}\n\n", unsafe_allow_html=True)  
-                i += 1 
-            blank()
 
                 
 with modify_tab:  
@@ -434,19 +458,16 @@ with modify_tab:
             topic_name = st.text_input("Delete by topic name")
         
         st.markdown("------")
-        psswrd = st.text_input("Password")
         modify = st.form_submit_button("Make modification") 
         
     if modify: 
-        
-        password_valid = helpers.password_authenticate(psswrd)
-        
+                
         modification = 'Delete' # remove this... 
 
         content_id_delete = len(content_id) > 1 
         topic_delete = len(topic_name) > 1
 
-        if password_valid:  
+        if st.session_state['valid_password']:  
             
             if modification == 'Delete': 
                 st.info("Deleting content...") 
