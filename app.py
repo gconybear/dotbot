@@ -20,7 +20,14 @@ st.set_page_config(
     layout="centered",
     initial_sidebar_state="collapsed",
     menu_items = None
-) 
+)  
+
+for k in ['q', 'current_query', 'previous_queries']:  
+    if k not in st.session_state: 
+        if k == 'previous_queries': 
+            st.session_state[k] = [] 
+        else:
+            st.session_state[k] = ''
 
 def show_chat_history():
     if 'convo' in st.session_state:  
@@ -97,20 +104,23 @@ ask_tab, input_tab, view_content_tab, modify_tab = st.tabs(['ChatDB', 'Submit Co
 
 with ask_tab:     
     
-    # with st.form(key='chat-form'):
-    #     #st.markdown("ChatDB")
-    #     query = st.text_input("Input query", placeholder='Ask me anything...')   
-    #     personality = st.selectbox("Personality", ['standard'] + sorted(personalities))
-    #     ask = st.form_submit_button("ask") 
+    with st.form(key='chat-form'):
+        #st.markdown("ChatDB") 
+        query = st.text_input("Input Query Here", placeholder='ask me anything...')   
+        #personality = st.selectbox("Personality", ['standard'] + sorted(personalities))
+        ask = st.form_submit_button("Ask DB") 
     
-    def clear_query():  
-        st.session_state.current_query = st.session_state.q 
-        st.session_state.q = '' 
+    # def clear_query():   
+    #     #st.session_state.previous_queries.append(st.session_state.q)
+    #     st.session_state.current_query = st.session_state.q   
+    #     st.session_state.q = '' 
 
-    query = st.text_input("", placeholder='Ask me anything...', key='q', on_change=clear_query) 
-    
-    if len(st.session_state.get('current_query', '')) > 2:    
-        query = st.session_state['current_query']
+    # query = st.text_input("", placeholder='Ask me anything...', key='q', on_change=clear_query)  
+
+    # cq = st.session_state.get('current_query', '')
+    # if (len(cq) > 2) and (cq not in st.session_state['previous_queries']):    
+    if ask: 
+        #query = st.session_state['current_query']
 
         if st.session_state['valid_password']: 
 
@@ -190,7 +200,8 @@ with ask_tab:
                     del st.session_state['convo']  
                     del st.session_state['current_query']
                     st.experimental_rerun()
-                
+            
+
         else: 
             st.error("Invalid credentials – please use sidebar to enter a valid password")
     
