@@ -88,7 +88,7 @@ else:
     st.session_state['valid_password'] = False 
 
 
-st.header("DotBot 🤖")  
+st.header(":red[D]ot:red[B]ot 🦑")  
 
 #hide_st_style = """
 #            <style>
