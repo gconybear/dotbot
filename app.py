@@ -137,8 +137,11 @@ with ask_tab:
     ##                    blank()
     #                st.write(docs)  
                         
-                
-                st.markdown(f"**DB**: {answer}")    
+                if chat_personality.lower() != 'standard':
+                    st.markdown(f"**DB ({chat_personality})**: {answer}")     
+                else: 
+                    st.markdown(f"**DB**: {answer}")
+
                 blank() 
                 blank()
                 show_chat_history()
