@@ -4,3 +4,4 @@ venv/
 __pycache__/ 
 venv/ 
 matt_app_demo_transcript.txt
+myenv/
