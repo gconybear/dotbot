@@ -28,12 +28,15 @@ def get_recent_elements(lst, n):
 
 def get_id(): return str(uuid.uuid4()) 
 
-def password_authenticate(password): 
+def password_authenticate(password) -> dict: 
+
+    if password == st.secrets['base_password']: 
+        return {'valid': True, 'admin': False}
     
     if password == st.secrets['super_admin_password']: 
-        return True 
+        return {'valid': True, 'admin': True}
     
     if password == st.secrets['super_admin_password1']: 
-        return True
+        return {'valid': True, 'admin': True}
     
-    return False 
+    return {'valid': False, 'admin': False} 
