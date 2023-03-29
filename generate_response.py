@@ -43,7 +43,10 @@ class AI:
         if personality != 'standard': 
             header=LLM_PARAMS.PROMPT_HEADERS[6].format(personality, personality, personality) 
         else: 
-            header=LLM_PARAMS.PROMPT_HEADERS[5]
+            header=LLM_PARAMS.PROMPT_HEADERS[5] 
+
+        header += """  For reference, we label our stores in the format RDXXX where XXX represents numerical signifiers. 
+        For example, RD050 is equivalent to rd50, and RD005 is equivalent to rd5 or RD005 but NOT rd157."""
         
         docs = self.embed_and_get_closest_docs(Q)  
         
