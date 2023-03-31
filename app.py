@@ -241,7 +241,7 @@ with request_tab:
 
         s3 = S3()  
         s3.upload_file_to_s3(
-                            data={'name': request_name, 'request': req}, 
+                            data={'name': request_name, 'request': new_content_request}, 
                             path='requests/', 
                             fname=request_id, 
                             file_type='pkl'
