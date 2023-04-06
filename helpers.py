@@ -28,7 +28,9 @@ def get_recent_elements(lst, n):
 
 def get_id(): return str(uuid.uuid4()) 
 
-def password_authenticate(password) -> dict: 
+def password_authenticate(password) -> dict:  
+
+    password = password.strip()
 
     if password == st.secrets['base_password']: 
         return {'valid': True, 'admin': False}
