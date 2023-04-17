@@ -35,3 +35,25 @@ class S3:
         print(f'successful aws upload! {fname} uploaded to {bucket}/{path}.{file_type}')
         return True
 
+def pull_content_requests(conn): 
+
+    all_requests = conn.list_objects(Bucket='rd-dotbot', Prefix=f'requests/') 
+    completed_requests = conn.list_objects(Bucket='rd-dotbot', Prefix=f'requests/completed-requests/')
+
+    all_req_fp = [x['Key'].replace('requests/', '').strip('.pkl') for x in all_requests['Contents'] if 'completed-requests' not in x['Key']] 
+    comp_req_fp = [x['Key'].replace('requests/completed-requests/', '').strip('.pkl') for x in completed_requests['Contents']] 
+
+    # only incomplete requests 
+    incomplete = [k for k in all_req_fp if k not in comp_req_fp] 
+
+    # read them all  
+    reqs = []
+    for k in incomplete: 
+        fp = f"requests/{k}.pkl" 
+        f = pickle.loads(conn.get_object(Bucket='rd-dotbot', Key=fp)['Body'].read()) 
+        if not isinstance(f['request'], bool):  
+            f.update({'request_id': k})
+            reqs.append(f)
+
+
+    return reqs

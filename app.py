@@ -9,7 +9,7 @@ from embed import Embedder
 from generate_response import AI
 import helpers 
 from doc_parsing import parse_docx, parse_pdf, parse_txt, check_file_type, split_docs 
-from aws_connect import S3
+from aws_connect import S3, pull_content_requests
 from LLM_PARAMS import personalities 
 
 
@@ -50,6 +50,14 @@ primaryColor="#6d95b0"
 
 def blank(): return st.write('')  
 
+def get_content_requests(): 
+    s3 = S3() 
+    conn = s3.s3 
+
+    reqs = pull_content_requests(conn) 
+
+    return reqs 
+
 @st.cache_resource(ttl=.5*60*60)
 def get_index(): 
     
@@ -70,7 +78,7 @@ def get_index():
 #    
 #    return AI() 
 
-index = get_index() 
+index = get_index()  
 
 # ----- APP -----   
 
@@ -254,7 +262,8 @@ if st.session_state.get('admin'):
         with st.form(key='submit-form'):  
             
             st.caption("1. Create or upload content")
-            upload_type = st.selectbox("Upload type", ['choose an option', 'write custom text', 'upload document'], help="")  
+            upload_type = st.selectbox("Upload type", ['choose an option', 'write custom text', 'upload document'], help="")   
+            request_id = st.text_input("Request ID (if necessary)", help="If addressing a previously submitted content request, use this box to input the request id (get this from view content -> content requests)")
             blank() 
             
             with st.expander("Text"):  
@@ -279,11 +288,14 @@ if st.session_state.get('admin'):
             password = st.text_input("Password")
             submit = st.form_submit_button("Submit")  
             
-        if submit:  
+        if submit:   
+
+            request_id = request_id.strip()
             
             # todo: check for required info   
             text_upload = upload_type == 'write custom text' 
-            doc_upload = upload_type == 'upload document'  
+            doc_upload = upload_type == 'upload document'   
+            from_request = request_id != ''
             
             upload_check = upload_type.lower() != 'choose an option'  
             
@@ -395,6 +407,15 @@ if st.session_state.get('admin'):
                             else:
                                 # saves to pinecone AND s3
                                 em.embed_and_save(content_id=content_id, text=user_text, metadata=metadata, aws=True) 
+                        
+                        
+                        if from_request:
+                            s3.upload_file_to_s3(
+                                data={'done': True, 'metadata': metadata}, 
+                                path='requests/completed-requests/', 
+                                fname=request_id, 
+                                file_type='pkl'
+                            )
 
                         st.success("Success! Your input has been uploaded to the system")  
 
@@ -443,7 +464,15 @@ if st.session_state.get('admin'):
                                 user_text = f"The topic of this text is about: {doc_topic}\n\n" + parsed
 
                                 em.embed_and_save(content_id=content_id, text=user_text, metadata=metadata, aws=True) 
-                                st.success("text embedded and saved") 
+                                st.success("text embedded and saved")  
+
+                        if from_request:
+                            s3.upload_file_to_s3(
+                                data={'done': True, 'metadata': metadata}, 
+                                path='requests/completed-requests/', 
+                                fname=request_id, 
+                                file_type='pkl'
+                            )
                                 
                         
 
@@ -457,7 +486,7 @@ if st.session_state.get('admin'):
         
     #    with st.form(key='-form'): 
         
-        with st.expander("Text Search"):
+        with st.expander("Search for Existing Content"):
             content_query = st.text_input("Search content") 
 
             search_content = st.button("Search")  
@@ -466,7 +495,11 @@ if st.session_state.get('admin'):
             
             n_results = st.slider("N most recent", min_value=5, max_value=50, value=5) 
             
-            recent_uploads_search = st.button("Seach") 
+            recent_uploads_search = st.button("Seach")  
+
+        with st.expander("Content Requests"): 
+            st.caption("Use this to browse open requests submitted from around the org")
+            show_content_requests = st.button("Show")
             
         if recent_uploads_search:  
             if st.session_state['valid_password']:
@@ -504,7 +537,26 @@ if st.session_state.get('admin'):
                     with st.expander(f"document {i} text"):
                         st.markdown(f"{d['metadata']['text']}\n\n", unsafe_allow_html=True)  
                         i += 1 
-                    blank()
+                    blank() 
+
+        if show_content_requests:    
+
+            with st.spinner("Pulling requests"):
+                content_requests = get_content_requests() 
+ 
+            st.markdown('-----')
+            
+            for r in content_requests:  
+                name = r['name'] 
+                if len(name) == 0: 
+                    name = 'no name attached' 
+
+                st.markdown(f"**{name}**: <i>{r['request']}</i>", unsafe_allow_html=True)   
+                st.code(f"{r['request_id']}", None)  
+                st.caption("Copy the above signifier to use in the 'submit content tab' ")
+
+                blank() 
+                blank()
 
                     
     with modify_tab:  
