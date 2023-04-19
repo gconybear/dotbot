@@ -115,14 +115,14 @@ else:
 st.header(":red[D]ot:red[B]ot")  # 🦑
 
 # --- HIDE STREAMLIT STYLE ---
-hide_st_style = """
-            <style>
-            MainMenu {visibility: hidden;}
-            footer {visibility: hidden;}
-            header {visibility: hidden;}
-            </style>
-            """
-st.markdown(hide_st_style, unsafe_allow_html=True)
+# hide_st_style = """
+#             <style>
+#             MainMenu {visibility: hidden;}
+#             footer {visibility: hidden;}
+#             header {visibility: hidden;}
+#             </style>
+#             """
+# st.markdown(hide_st_style, unsafe_allow_html=True)
 
 if st.session_state.get('admin'):
     ask_tab, request_tab, input_tab, view_content_tab, modify_tab = st.tabs(['ChatDB', 
@@ -544,14 +544,20 @@ if st.session_state.get('admin'):
             with st.spinner("Pulling requests"):
                 content_requests = get_content_requests() 
  
-            st.markdown('-----')
+            st.markdown('-----') 
             
+            current_date = None
             for r in content_requests:  
                 name = r['name'] 
                 if len(name) == 0: 
                     name = 'no name attached' 
 
-                st.markdown(f"**{name}**: <i>{r['request']}</i>", unsafe_allow_html=True)   
+                #st.markdown(f"**{name}**: <i>{r['request']}</i>", unsafe_allow_html=True)      
+                if r['date'] != current_date:
+                    st.caption(r['date']) 
+                    current_date = r['date'] 
+
+                st.markdown(f"**{name}**: <i>{r['request']}</i>", unsafe_allow_html=True) 
                 st.code(f"{r['request_id']}", None)  
                 st.caption("Copy the above signifier to use in the 'submit content tab' ")
 
