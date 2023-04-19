@@ -115,14 +115,14 @@ else:
 st.header(":red[D]ot:red[B]ot")  # 🦑
 
 # --- HIDE STREAMLIT STYLE ---
-# hide_st_style = """
-#             <style>
-#             MainMenu {visibility: hidden;}
-#             footer {visibility: hidden;}
-#             header {visibility: hidden;}
-#             </style>
-#             """
-# st.markdown(hide_st_style, unsafe_allow_html=True)
+hide_st_style = """
+            <style>
+            MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            header {visibility: hidden;}
+            </style>
+            """
+st.markdown(hide_st_style, unsafe_allow_html=True)
 
 if st.session_state.get('admin'):
     ask_tab, request_tab, input_tab, view_content_tab, modify_tab = st.tabs(['ChatDB', 
