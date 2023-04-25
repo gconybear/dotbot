@@ -83,7 +83,7 @@ index = get_index()
 # ----- APP -----   
 
 
-master_password = st.sidebar.text_input("Password / PIN")   
+master_password = st.sidebar.text_input("Password / PIN", type='password')   
 chat_personality = st.sidebar.selectbox("Chat Personality", ['standard'] + sorted(personalities))
 st.sidebar.text('')
 st.sidebar.text('')
