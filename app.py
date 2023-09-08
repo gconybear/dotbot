@@ -78,13 +78,22 @@ def get_index():
 #    
 #    return AI() 
 
-index = get_index()  
+index = get_index()   
+
+# Initialize chat history
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
 # ----- APP -----   
 
 
 master_password = st.sidebar.text_input("Password / PIN", type='password')   
-chat_personality = st.sidebar.selectbox("Chat Personality", ['standard'] + sorted(personalities))
+chat_personality = st.sidebar.selectbox("Chat Personality", ['standard'] + sorted(personalities)) 
+model_choice = st.sidebar.selectbox("Model", ['GPT 3.5', 'GPT 4'], help="""
+GPT 4 is the most sophisticated model in the world, but takes slightly longer to respond. Use it for more complex questions.""") 
+
+model = 'gpt-3.5-turbo' if model_choice == 'GPT 3.5' else 'gpt-4'
+
 st.sidebar.text('')
 st.sidebar.text('')
 st.sidebar.image('Untitled.png', width=225)  
@@ -122,7 +131,7 @@ hide_st_style = """
             header {visibility: hidden;}
             </style>
             """
-st.markdown(hide_st_style, unsafe_allow_html=True)
+#st.markdown(hide_st_style, unsafe_allow_html=True)
 
 if st.session_state.get('admin'):
     ask_tab, request_tab, input_tab, view_content_tab, modify_tab = st.tabs(['ChatDB', 
@@ -153,21 +162,23 @@ with ask_tab:
     if ask: 
         #query = st.session_state['current_query']
 
-        if st.session_state['valid_password']: 
+        if st.session_state['valid_password']:   
 
+            
             if len(query) > 1: 
-                st.caption(f"**You**: {query}")   
+                #st.caption(f"**You**: {query}")   
                 with st.spinner("Computing response"): 
 
                     ai = AI(index) 
 
                     #docs = ai.embed_and_get_closest_docs(query)  
-                    prompt, docs = ai.construct_prompt(query, return_docs=True, personality=chat_personality)  
+                    prompt, docs, header = ai.construct_prompt(query, return_docs=True, personality=chat_personality)  
 
+                    # rizz
                     if 'convo' in st.session_state:  
-                        answer = ai.answer(prompt, history=st.session_state['convo'])  
+                        answer = ai.answer(prompt, model=model, history=st.session_state['convo'])  
                     else:
-                        answer = ai.answer(prompt)
+                        answer = ai.answer(prompt, model=model)
 
                 #st.markdown("**Answer**: i don't know yet :(")  
                 
@@ -177,16 +188,22 @@ with ask_tab:
     ##                with st.expander("1"): 
     ##                    blank()
     #                st.write(docs)  
-                        
+                
+                blank()
                 if chat_personality.lower() != 'standard':
                     st.markdown(f"**DB ({chat_personality})**: {answer}")     
                 else: 
                     st.markdown(f"**DB**: {answer}") 
 
                 blank() 
-                blank()
-                show_chat_history()
-                #blank() 
+                blank() 
+                
+                st.caption(f"DotBot is using the **{model_choice}** model")  
+                
+                if 'convo' in st.session_state:
+                    st.markdown('-----')  
+                    show_chat_history()
+                
                 st.markdown("----")   
                 st.markdown("**References** – DotBot used these to come up with the answer above")   
                 if 'convo' not in st.session_state: 
@@ -221,8 +238,18 @@ with ask_tab:
     #                            file_name="pandas-clean-id-column.pdf",
     #                            mime=check_file_type(f))
                 st.markdown('---') 
-                with st.expander("Prompt"):
-                    st.write(prompt)   
+                with st.expander("Prompt"): 
+                    p = ""
+                    for mssg in prompt: 
+                        if mssg.get('role') == 'system':  
+                            context = tuple(mssg.get('content').split('Below is the context.'))  
+                            p += f"**System Instructions**:\n\n{header}" + "\n\n" + f"**Context**:\n\n{context[-1]}" + "\n\n" 
+                        
+                        if mssg.get('role') == 'user':
+                            p += mssg.get('content') + "\n\n" 
+                    
+                    st.write(p)
+                            
 
                 blank() 
                 blank()

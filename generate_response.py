@@ -1,11 +1,14 @@
 import streamlit as st  
 import openai 
+import datetime
 
 
 from embed import Embedder 
 import LLM_PARAMS
 
-PROMPT_KEY = 6
+PROMPT_KEY = 5 
+
+today = str(datetime.datetime.today())
 
 class AI: 
     
@@ -45,8 +48,11 @@ class AI:
         else: 
             header=LLM_PARAMS.PROMPT_HEADERS[5] 
 
-        header += """  For reference, we label our stores in the format RDXXX where XXX represents numerical signifiers. 
-        For example, RD050 is equivalent to rd50, and RD005 is equivalent to rd5 or RD005 but NOT rd157."""
+        header += f"""\n\nA couple quick references: \n\n- we label our stores in the format RDXXX where XXX represents numerical signifiers. For example, RD050 is equivalent to rd50, and RD005 is equivalent to rd5 or RD005 but NOT rd157. \n\n- the term 'FS' refers to a Facility Supervisor\n\n- the current date is {today}\n\n- always tell the truth and be honest if you do not know the answer\n\n- you must only provide an answer if and only if you find the answer to the question in the provided context""" 
+
+        header += "\n\n Lastly, you must absolutely and always answer the quesiton as truthfully as possible and say you that you do not know if the answer is not contained in the provided context. This is extremely important and you must always adhere to this rule. Never make up an answer unless the answer is contained explicitly in the provided context." 
+
+        header += "\n\nBelow is the context.\n\n\n"
         
         docs = self.embed_and_get_closest_docs(Q)  
         
@@ -68,45 +74,81 @@ class AI:
                     current_len += token_count
                 else: 
                     pass  
-            break  
+            break   
         
+        user_prompt = f"""Given the context above, please answer the following question: \n\nQ: {Q} \n\n A:"""
+
+        prompt = [
+            {'role': 'system', 'content': header + "".join(sections)}, 
+            {'role': 'user', 'content': user_prompt}
+        ] 
+
         if return_docs: 
-            return header + "".join(sections) + "\n\n Q: " + Q + "\n A:", docs 
-        else: 
-            return header + "".join(sections) + "\n\n Q: " + Q + "\n A:"
-    
-    def answer(self, prompt, COMPLETIONS_API_PARAMS=LLM_PARAMS.COMPLETIONS_API_PARAMS, history=None):  
-        
-        if LLM_PARAMS.COMPLETIONS_MODEL == "gpt-3.5-turbo": 
-            
-            #st.info("Using ChatGPT API") 
-
-            if history is not None:    
-
-                history = [{'role': x['role'], 'content': x.get('query', x['content'])} for x in history] 
-
-                response = openai.ChatCompletion.create(
-                    model="gpt-3.5-turbo", 
-                    messages = history + [{"role": "user", "content": prompt}]
-                    ) 
-                    
-            else:
-            
-                response = openai.ChatCompletion.create(
-                    model="gpt-3.5-turbo", 
-                    messages=[{"role": "user", "content": prompt}]
-                    ) 
-                
-            return response['choices'][0]['message']['content'] #.strip(' \n') 
-        
+            return prompt, docs, header
         else:
+            return prompt
+        
+        # if return_docs: 
+        #     return header + "".join(sections) + "\n\n Q: " + Q + "\n A:", docs 
+        # else: 
+        #     return header + "".join(sections) + "\n\n Q: " + Q + "\n A:"
+    
+    def answer(self, prompt, model='gpt-4', temp=0.0, max_tokens=300,
+               COMPLETIONS_API_PARAMS=LLM_PARAMS.COMPLETIONS_API_PARAMS, history=None):  
+        
+        assert model in ["gpt-3.5-turbo", "gpt-4"], "model must be either gpt-3.5-turbo or gpt-4"  
 
-            response = openai.Completion.create(
-                prompt=prompt,
-                **COMPLETIONS_API_PARAMS
-            )
+        if history is not None:           
+            history = [{'role': x['role'], 'content': x.get('query', x['content'])} for x in history]  
+            prompt = history + prompt  
 
-            return response["choices"][0]["text"].strip(" \n")
+        response = openai.ChatCompletion.create(
+                    model=model, 
+                    messages=prompt, 
+                    temperature=temp,
+                    )  
+        
+        return response['choices'][0]['message']['content']
+
+
+
+        # if model in ["gpt-3.5-turbo", "gpt-4"]: 
+            
+        #     #st.info("Using ChatGPT API") 
+
+        #     if history is not None:    
+
+        #         history = [{'role': x['role'], 'content': x.get('query', x['content'])} for x in history]  
+
+        #         prompt = history + prompt 
+
+        #     response = openai.ChatCompletion.create(
+        #             model=model, 
+        #             messages=prompt
+        #             ) 
+
+        #     #     response = openai.ChatCompletion.create(
+        #     #         model=model, 
+        #     #         messages = history + [{"role": "user", "content": prompt}]
+        #     #         ) 
+                    
+        #     # else:
+            
+        #     #     response = openai.ChatCompletion.create(
+        #     #         model=model, 
+        #     #         messages=[{"role": "user", "content": prompt}]
+        #     #         ) 
+                
+        #     return response['choices'][0]['message']['content'] #.strip(' \n') 
+        
+        # else:
+
+        #     response = openai.Completion.create(
+        #         prompt=prompt,
+        #         **COMPLETIONS_API_PARAMS
+        #     )
+
+        #     return response["choices"][0]["text"].strip(" \n")
         
         
         
