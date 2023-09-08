@@ -50,7 +50,7 @@ class AI:
 
         header += f"""\n\nA couple quick references: \n\n- we label our stores in the format RDXXX where XXX represents numerical signifiers. For example, RD050 is equivalent to rd50, and RD005 is equivalent to rd5 or RD005 but NOT rd157. \n\n- the term 'FS' refers to a Facility Supervisor\n\n- the current date is {today}\n\n- always tell the truth and be honest if you do not know the answer\n\n- you must only provide an answer if and only if you find the answer to the question in the provided context""" 
 
-        header += "\n\n Lastly, you must absolutely and always answer the quesiton as truthfully as possible and say you that you do not know if the answer is not contained in the provided context. This is extremely important and you must always adhere to this rule. Never make up an answer unless the answer is contained explicitly in the provided context." 
+        header += "\n\n Lastly, you must absolutely and always answer the question as truthfully as possible and say you that you are unsure of the answer if the answer is not contained in the provided context. This is extremely important and you must always adhere to this rule. Never make up an answer unless the answer is contained explicitly in the provided context." 
 
         header += "\n\nBelow is the context.\n\n\n"
         
