@@ -54,7 +54,7 @@ Now, please return a json object with the following keys:
 - `comments`: short string with any comments on code used
 """ 
 
-sql_examples_context = "Here are some example queries. They may or may not be relevant to the user's query, but provide some context on the database structure in order to build a valid PostgresSQL query. \n\n"
+sql_examples_context = "Here are some example queries. They may or may not be relevant to the user's question, but should provide some context on the database structure in order to build a valid PostgresSQL query. \n\n"
 
 
 analyzer_instructions = """
