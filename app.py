@@ -222,10 +222,12 @@ if st.session_state.get('admin'):
             elif agent_select == 'accounting': 
                 namespace = 'accounting' 
             else: 
-                namespace = 'original'   
+                namespace = 'original'    
+
+            st.caption(f"namespace: **{namespace}**")
 
             if agent_select == 'sql': 
-                context_full = '```' + context_full + '```' 
+                context_full = '```\n' + context_full + '\n```' 
             
             concat_context = context_summary + "\n\n" + context_full
             
