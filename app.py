@@ -174,7 +174,7 @@ with ask_tab:
                 ddb_item = {
                     "timestamp": datetime.now().isoformat(),
                     "message": str(query), 
-                    "response": str(ans), 
+                    "response": str(ans) if not csv_output else "csv output", 
                     "response_time": end - start,
                     "interface": 'app',
                     'file_output': csv_output,
