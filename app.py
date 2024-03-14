@@ -1,7 +1,9 @@
 import streamlit as st     
 import numpy as np 
 
-from generate_response import AI 
+from generate_response import AI  
+
+from agents import meta
 from rag import RAG 
 from vector_db import PineconeDB
 import helpers 
@@ -54,8 +56,6 @@ def get_content_requests():
 
     return reqs  
 
-
-def blank(): return st.write('')
  
 
 # Initialize chat history
@@ -64,16 +64,19 @@ if "messages" not in st.session_state:
 
 # ----- APP -----   
 
-MODES = ['base', 'accounting', 'SQL', 'python'] 
+MODES = ['base', 'SQL'] 
 
 master_password = st.sidebar.text_input("Password / PIN", type='password')   
-chat_agent = st.sidebar.selectbox("Mode", MODES) 
-model_choice = st.sidebar.selectbox("Model", ['GPT 3.5', 'GPT 4'], help="""
-GPT 4 is the most sophisticated model in the world, but takes slightly longer to respond. Use it for more complex questions.""") 
+chat_agent = st.sidebar.selectbox("Mode", MODES)  
+st.sidebar.text('')
+st.sidebar.text('')
+# model_choice = st.sidebar.selectbox("Model", ['GPT 3.5', 'GPT 4'], help="""
+# GPT 4 is the most sophisticated model in the world, but takes slightly longer to respond. Use it for more complex questions.""") 
 
-model = "gpt-3.5-turbo-0125" if model_choice == 'GPT 3.5' else "gpt-4-0125-preview"
+#model = "gpt-3.5-turbo-0125" if model_choice == 'GPT 3.5' else "gpt-4-0125-preview" 
 
-blank()
+model = "gpt-4-0125-preview" 
+
 blank()
 st.sidebar.image('Untitled.png', width=225)  
 blank()
@@ -124,6 +127,7 @@ else:
 with ask_tab:     
     
     with st.form(key='chat-form'):
+        st.caption(f"Using **{chat_agent}** agent")
         query = st.text_input("Input Query Here", placeholder='ask me anything...')   
         ask = st.form_submit_button("Ask DB") 
   
@@ -134,26 +138,37 @@ with ask_tab:
             st.stop()
         
         if len(query) > 1: 
-            with st.spinner("Computing response"):  
+            with st.spinner("Computing response"):    
 
-                rag_agent = RAG() 
-                ans, docs = rag_agent.answer(query, model=model, return_docs=True) 
+                query = helpers.standardize_site_code(query)
+
+                agent = meta.AI() 
+                ans, docs = agent.answer(query, agent=chat_agent.lower(), model=model, return_docs=True)  
                 st.markdown(ans)  
 
+
+ 
+
             blank() 
-            st.markdown('------') 
-            st.caption("Context used to answer the question. Results ordered by relevance.")
-            MAX_DOCS_TO_SHOW = 5
-            i = 1
-            for d in docs['matches']:   
-                if i > 5: 
-                    break 
-                    
-                with st.expander(f"Source **{i}**"): # Document {i} --
-                    st.markdown(f"**Content**: {d['metadata']['text']}", unsafe_allow_html=True) 
-                    st.markdown(f"**Tags**: {', '.join(d['metadata'].get('tags')) if len(d['metadata'].get('tags', [])) > 0 else 'None'}") 
-                    i += 1
+            st.markdown('------')  
+            if chat_agent == 'base': 
+                st.caption("Context used to answer the question. Results ordered by relevance.")
+                MAX_DOCS_TO_SHOW = 5
+                i = 1
+                for d in docs['matches']:   
+                    if i > 5: 
+                        break 
+                        
+                    with st.expander(f"Source **{i}**"): # Document {i} --
+                        st.markdown(f"**Content**: {d['metadata']['text']}", unsafe_allow_html=True) 
+                        st.markdown(f"**Tags**: {', '.join(d['metadata'].get('tags')) if len(d['metadata'].get('tags', [])) > 0 else 'None'}") 
+                        i += 1 
             
+            if chat_agent == 'SQL': 
+                with st.expander("SQL Examples"): 
+                    st.markdown(docs, unsafe_allow_html=True)
+                
+                
 
             blank() 
             blank()

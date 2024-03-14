@@ -2,9 +2,31 @@ import uuid
 import streamlit as st  
 from operator import itemgetter 
 import pytz 
-import pickle
+import pickle 
+import re 
 
-eastern_tz = pytz.timezone('US/Eastern') 
+eastern_tz = pytz.timezone('US/Eastern')  
+
+def standardize_site_code(input_string):
+    # Define the regex pattern to match the site codes
+    # This pattern looks for 'RD' or 'rd' followed by 1 to 3 digits
+    pattern = re.compile(r'\b(rd|RD)(\d{1,3})\b')
+
+    def replace_func(match):
+        # Extract the site code parts: prefix (RD/rd) and the numeric part
+        prefix = match.group(1).upper()  # Ensure the prefix is uppercase
+        numeric_part = match.group(2)
+
+        # Standardize the numeric part to 3 digits with leading zeros
+        standardized_numeric_part = numeric_part.zfill(3)
+
+        # Return the standardized site code
+        return f'{prefix}{standardized_numeric_part}'
+
+    # Use the sub() function to replace all occurrences in the input string
+    standardized_string = pattern.sub(replace_func, input_string)
+
+    return standardized_string
 
 def get_most_recent_db_submissions(s3, N): 
     res = s3.list_objects(Bucket='rd-dotbot', Prefix=f'content/') 
