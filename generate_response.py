@@ -1,7 +1,6 @@
+import datetime 
 import streamlit as st  
 import openai 
-import datetime
-
 
 from embed import Embedder 
 import LLM_PARAMS
@@ -9,6 +8,8 @@ import LLM_PARAMS
 PROMPT_KEY = 5 
 
 today = str(datetime.datetime.today())
+
+
 
 class AI: 
     
@@ -56,7 +57,6 @@ class AI:
         
         docs = self.embed_and_get_closest_docs(Q)  
         
-        print(docs.keys())
         
         MAX_LEN = 1000  
         SEPARATOR = "\n* " 
@@ -91,12 +91,12 @@ class AI:
         # if return_docs: 
         #     return header + "".join(sections) + "\n\n Q: " + Q + "\n A:", docs 
         # else: 
-        #     return header + "".join(sections) + "\n\n Q: " + Q + "\n A:"
+        #     return header + "".join(sections) + "\n\n Q: " + Q + "\n A:" 
     
-    def answer(self, prompt, model='gpt-4', temp=0.0, max_tokens=300,
+    def answer(self, prompt, model="gpt-4-0125-preview", temp=0.0, max_tokens=300,
                COMPLETIONS_API_PARAMS=LLM_PARAMS.COMPLETIONS_API_PARAMS, history=None):  
         
-        assert model in ["gpt-3.5-turbo", "gpt-4"], "model must be either gpt-3.5-turbo or gpt-4"  
+        assert model in ["gpt-3.5-turbo-0125", "gpt-4-0125-preview"], "Invalid model. Please use gpt-3.5-turbo-0125 or gpt-4-0125-preview." 
 
         if history is not None:           
             history = [{'role': x['role'], 'content': x.get('query', x['content'])} for x in history]  
