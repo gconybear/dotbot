@@ -1,8 +1,11 @@
 import streamlit as st     
-import numpy as np 
+import numpy as np  
+from datetime import datetime 
+import time
 
 from generate_response import AI  
 
+from miniDDB import miniDDB, format_floats
 from agents import meta
 from rag import RAG 
 from vector_db import PineconeDB
@@ -142,9 +145,25 @@ with ask_tab:
 
                 query = helpers.standardize_site_code(query)
 
+                start = time.time()
                 agent = meta.AI() 
-                ans, docs = agent.answer(query, agent=chat_agent.lower(), model=model, return_docs=True)  
-                st.markdown(ans)  
+                ans, docs = agent.answer(query, agent=chat_agent.lower(), model=model, return_docs=True)   
+                end = time.time()
+                st.markdown(ans)    
+
+                ddb_item = {
+                    "timestamp": datetime.now().isoformat(),
+                    "message": str(query), 
+                    "response": str(ans), 
+                    "response_time": end - start,
+                    "interface": 'app',
+                    "success": True
+                } 
+
+                # save to ddb  
+                ddb_item = format_floats(ddb_item)
+                ddb = miniDDB(table_name='dotbot-logs') 
+                ddb.add_item(item=ddb_item, auto_id=True)
 
 
  
