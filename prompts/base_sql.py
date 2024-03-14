@@ -42,6 +42,7 @@ A few helpful tips for writing SQL queries in this environment:
 - The `units` table contains info on all of our storage units, including their size, street rate (web price), and unrentable status 
 - Make sure to propertly indent and space your SQL strings 
 - Feel free to write as much custom parsing code as you need in Python after making the SQL call. DO NOT overcomplicate the sql call since you don't have full knowledge of the database schema.
+- FS is an abbreviation for "Facility Supervisor"
 
 ------- 
 
