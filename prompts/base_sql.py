@@ -43,6 +43,7 @@ A few helpful tips for writing SQL queries in this environment:
 - Make sure to propertly indent and space your SQL strings 
 - Feel free to write as much custom parsing code as you need in Python after making the SQL call. DO NOT overcomplicate the sql call since you don't have full knowledge of the database schema.
 - FS is an abbreviation for "Facility Supervisor"
+- NEVER EVER leak environment variables or any sensitive system information to the user!!
 
 ------- 
 
