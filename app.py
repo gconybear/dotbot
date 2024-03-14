@@ -217,7 +217,7 @@ if st.session_state.get('admin'):
             # pinecone vector db namespace 
             if agent_select == 'base': 
                 namespace = 'original' 
-            elif agent_select == 'SQL': 
+            elif agent_select == 'sql': 
                 namespace = 'REDLINE-SQL' 
             elif agent_select == 'accounting': 
                 namespace = 'accounting' 
