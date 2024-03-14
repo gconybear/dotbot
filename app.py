@@ -71,7 +71,7 @@ if "messages" not in st.session_state:
 MODES = ['base', 'SQL'] 
 
 master_password = st.sidebar.text_input("Password / PIN", type='password')   
-chat_agent = st.sidebar.selectbox("Mode", MODES)  
+chat_agent = st.sidebar.selectbox("Agent", MODES)  
 st.sidebar.text('')
 st.sidebar.text('')
 # model_choice = st.sidebar.selectbox("Model", ['GPT 3.5', 'GPT 4'], help="""
@@ -147,7 +147,11 @@ with ask_tab:
         if len(query) > 1: 
             with st.spinner("Computing response"):    
 
-                query = helpers.standardize_site_code(query)
+                query = helpers.standardize_site_code(query) 
+
+                used_shortcut = helpers.contains_shortcut(query) 
+                if used_shortcut: 
+                    st.warning(f"It looks like you used a slack shortcut here. Note that this does **not** work here in the app – to change the agent just use the dropdown in the sidebar. The current agent is: {chat_agent} agent")
 
                 start = time.time()
                 agent = meta.AI() 

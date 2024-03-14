@@ -5,7 +5,17 @@ import pytz
 import pickle 
 import re 
 
-eastern_tz = pytz.timezone('US/Eastern')  
+eastern_tz = pytz.timezone('US/Eastern')   
+
+def contains_shortcut(text):
+    # Define a regex pattern to match '--' followed by an optional space and then any word or phrase
+    pattern = r"--\s*\w+"
+    
+    # Search for the pattern in the text
+    if re.search(pattern, text):
+        return True
+    else:
+        return False
 
 def standardize_site_code(input_string):
     # Define the regex pattern to match the site codes
