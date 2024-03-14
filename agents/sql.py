@@ -23,7 +23,7 @@ class SQLAgent:
 
         return context 
     
-    def answer(self, query: str, return_docs=True) -> str: 
+    def answer(self, query: str, return_docs=True, return_csv=False) -> str: 
         
         """
         1. gather context via RAG 
@@ -34,9 +34,20 @@ class SQLAgent:
         # gather context (vector retrieval)
         context = base_sql.sql_examples_context + self.gather_query_examples(query=query)  
 
-        # generate sql query and execute (GPT-4 call + eval)
-        c = Coder(context=[context, self.base_prompt], include_base_context=False) 
-        res = c.answer(query) 
+        # generate sql query and execute (GPT-4 call + eval) 
+        if return_csv:
+            c = Coder(context=[context, self.base_prompt, base_sql.csv_output_context], include_base_context=False)  
+        else:
+            c = Coder(context=[context, self.base_prompt], include_base_context=False) 
+        
+        res = c.answer(query)  
+
+        if return_csv: 
+            # we don't need the summarizer, will just return csv  
+            if return_docs: 
+                return res.get('answer', '').replace("**(sql agent)**", ''), context 
+            else:
+                return res.get('answer', '')
 
         # analyze result with 3.5 turbo and return (GPT-3.5 call)
         instructions = base_sql.analyzer_instructions + f"Q: {query}\n\n" + f"Result: {res.get('answer')}"

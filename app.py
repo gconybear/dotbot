@@ -1,5 +1,6 @@
 import streamlit as st     
-import numpy as np  
+import pandas as pd 
+from io import StringIO
 from datetime import datetime 
 import time
 
@@ -126,12 +127,18 @@ else:
 
 with ask_tab:     
     
+    csv_output = False
     with st.form(key='chat-form'):
         st.caption(f"Using **{chat_agent}** agent")
-        query = st.text_input("Input Query Here", placeholder='ask me anything...')   
+        query = st.text_input("Input Query Here", placeholder='ask me anything...')     
+        if chat_agent == 'SQL': 
+            csv_output = st.checkbox("Output csv", help="check this box if you want the output to be in csv format") 
+
+        blank()
         ask = st.form_submit_button("Ask DB") 
   
-    if ask: 
+    if ask:  
+
 
         if not st.session_state['valid_password']:    
             st.error("Invalid credentials – please use sidebar to enter a valid password") 
@@ -144,9 +151,25 @@ with ask_tab:
 
                 start = time.time()
                 agent = meta.AI() 
-                ans, docs = agent.answer(query, agent=chat_agent.lower(), model=model, return_docs=True)   
-                end = time.time()
-                st.markdown(ans)    
+                ans, docs = agent.answer(query=query, 
+                                         agent=chat_agent.lower(), 
+                                         model=model, 
+                                         return_docs=True, 
+                                         csv_output=csv_output)   
+                end = time.time() 
+                if csv_output:  
+                    # ans is a csv string, turn it into a dataframe
+                    csv_file_like_object = StringIO(ans)
+                    df = pd.read_csv(csv_file_like_object) 
+                    st.markdown("Here are the results in csv format. Use the button below to download the data.") 
+                    st.download_button(label="Download Data",
+                                        data=ans,
+                                        file_name="dotbot_output.csv",
+                                        mime="text/csv")
+                    st.dataframe(df) 
+                     
+                else:
+                    st.markdown(ans)    
 
                 ddb_item = {
                     "timestamp": datetime.now().isoformat(),
@@ -154,6 +177,7 @@ with ask_tab:
                     "response": str(ans), 
                     "response_time": end - start,
                     "interface": 'app',
+                    'file_output': csv_output,
                     "success": True
                 } 
 

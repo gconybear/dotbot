@@ -54,7 +54,20 @@ Now, please return a json object with the following keys:
 - `comments`: short string with any comments on code used
 """ 
 
-sql_examples_context = "Here are some example queries. They may or may not be relevant to the user's question, but should provide some context on the database structure in order to build a valid PostgresSQL query. \n\n"
+sql_examples_context = "Here are some example queries. They may or may not be relevant to the user's question, but should provide some context on the database structure in order to build a valid PostgresSQL query. \n\n" 
+
+csv_output_context = """If you see this, you MUST – I repeat **MUST** – return a csv string as the `result` variable in the code above. The user has requested a csv output, and you must oblige. FYI, we will use the content of `result` to serve the csv to the user like so: 
+
+```python 
+import streamlit as st  
+
+st.download_button(
+    label="Download data as CSV",
+    data=result, # the result variable from the executed code 
+    file_name='example_data.csv',
+    mime='text/csv',
+)
+```"""
 
 
 analyzer_instructions = """
