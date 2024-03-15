@@ -71,7 +71,7 @@ if "messages" not in st.session_state:
 MODES = ['base', 'SQL'] 
 
 master_password = st.sidebar.text_input("Password / PIN", type='password')   
-chat_agent = st.sidebar.selectbox("Agent", MODES)  
+chat_agent = st.sidebar.selectbox("Agent", MODES, help="""Choose the agent you'd like to use to answer questions.\n\n**Base**: Use this for general questions (e.g., "What is a unit check?", "Where is the Houston office located?")\n\n**SQL**: Use this for questions about SQL queries or general questions about accessing data from our redline database. (e.g., "Where is RD112 located?", "What is the street rate for all 10x10 units at RD050?", "How many move ins have we had today at all facilities?")""")  
 st.sidebar.text('')
 st.sidebar.text('')
 # model_choice = st.sidebar.selectbox("Model", ['GPT 3.5', 'GPT 4'], help="""
