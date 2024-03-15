@@ -45,9 +45,9 @@ class SQLAgent:
         if return_csv: 
             # we don't need the summarizer, will just return csv  
             if return_docs: 
-                return res.get('answer', '').replace("**(sql agent)**", ''), context 
+                return res.get('answer', ''), context, res.get('code', '')
             else:
-                return res.get('answer', '')
+                return res.get('answer', ''), None, res.get('code', '')
 
         # analyze result with 3.5 turbo and return (GPT-3.5 call)
         instructions = base_sql.analyzer_instructions + f"Q: {query}\n\n" + f"Result: {res.get('answer')}"
@@ -58,6 +58,6 @@ class SQLAgent:
         answer += f"\n\nThe following code was used to generate the result: \n\n```python\n{res.get('code', '')}```\n\n"
 
         if return_docs: 
-            return answer, context 
+            return answer, context, None
         else:
-            return answer
+            return answer, None, None

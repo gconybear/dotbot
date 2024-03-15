@@ -16,15 +16,17 @@ class AI:
 
         if agent == 'sql': 
             ai = SQLAgent() 
-            ans, docs = ai.answer(query, return_docs=return_docs, return_csv=csv_output)   
+            ans, docs, code = ai.answer(query, return_docs=return_docs, return_csv=csv_output)   
             if not csv_output:
                 return f"**({agent.lower()} agent)** " + ans, docs 
             else:
-                return ans, docs
+                return ans, docs, code
+        
         elif agent == 'base': 
             ai = RAG() 
             ans, docs = ai.answer(query, model=model, return_docs=return_docs) 
-            return f"**({agent.lower()} agent)** " + ans, docs
+            return f"**({agent.lower()} agent)** " + ans, docs, None
+        
         else: 
             raise ValueError(f"Agent {agent} not found") 
-            return None
+            

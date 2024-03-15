@@ -155,7 +155,7 @@ with ask_tab:
 
                 start = time.time()
                 agent = meta.AI() 
-                ans, docs = agent.answer(query=query, 
+                ans, docs, code = agent.answer(query=query, 
                                          agent=chat_agent.lower(), 
                                          model=model, 
                                          return_docs=True, 
@@ -170,7 +170,9 @@ with ask_tab:
                                         data=ans,
                                         file_name="dotbot_output.csv",
                                         mime="text/csv")
-                    st.dataframe(df) 
+                    st.dataframe(df)  
+                    st.caption("Code used")
+                    st.code(code)
                      
                 else:
                     st.markdown(ans)    
