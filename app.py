@@ -525,129 +525,129 @@ if st.session_state.get('admin'):
                 
             
                 
-    with view_content_tab: 
+    # with view_content_tab: 
         
-    #    with st.form(key='-form'): 
+    # #    with st.form(key='-form'): 
         
-        with st.expander("Search for Existing Content"):
-            content_query = st.text_input("Search content") 
+    #     with st.expander("Search for Existing Content"):
+    #         content_query = st.text_input("Search content") 
 
-            search_content = st.button("Search")  
+    #         search_content = st.button("Search")  
             
-        with st.expander("Most Recent Uploads"): 
+    #     with st.expander("Most Recent Uploads"): 
             
-            n_results = st.slider("N most recent", min_value=5, max_value=50, value=5) 
+    #         n_results = st.slider("N most recent", min_value=5, max_value=50, value=5) 
             
-            recent_uploads_search = st.button("Seach")  
+    #         recent_uploads_search = st.button("Seach")  
 
-        with st.expander("Content Requests"): 
-            st.caption("Use this to browse open requests submitted from around the org")
-            show_content_requests = st.button("Show")
+    #     with st.expander("Content Requests"): 
+    #         st.caption("Use this to browse open requests submitted from around the org")
+    #         show_content_requests = st.button("Show")
             
-        if recent_uploads_search:  
-            if st.session_state['valid_password']:
-                with st.spinner("Pulling recent uploads"): 
-                    s3 = S3().s3
-                    res = helpers.get_most_recent_db_submissions(s3, n_results) 
+    #     if recent_uploads_search:  
+    #         if st.session_state['valid_password']:
+    #             with st.spinner("Pulling recent uploads"): 
+    #                 s3 = S3().s3
+    #                 res = helpers.get_most_recent_db_submissions(s3, n_results) 
                     
-                    i = 1
-                    for doc in res:  
-                        st.markdown(f"<u>**:blue[Document {i}]** - {doc['metadata'].get('topic', '')}</u>", unsafe_allow_html=True) 
-                        st.markdown(f"**Content ID** (copy ID below to use in modify tab)" ) #--> **:red[{d['id']}]**  
-                        st.code(f"{doc['content_id']}", None)
-                        st.markdown(f"Submitted by: {doc['metadata']['submitted_by']} | {doc['upload_time']}")
-                        with st.expander(f"document {i} text"): 
-                            st.markdown(f"<i>{doc['content']}</i>", unsafe_allow_html=True)    
-                        i += 1 
-                        blank()
+    #                 i = 1
+    #                 for doc in res:  
+    #                     st.markdown(f"<u>**:blue[Document {i}]** - {doc['metadata'].get('topic', '')}</u>", unsafe_allow_html=True) 
+    #                     st.markdown(f"**Content ID** (copy ID below to use in modify tab)" ) #--> **:red[{d['id']}]**  
+    #                     st.code(f"{doc['content_id']}", None)
+    #                     st.markdown(f"Submitted by: {doc['metadata']['submitted_by']} | {doc['upload_time']}")
+    #                     with st.expander(f"document {i} text"): 
+    #                         st.markdown(f"<i>{doc['content']}</i>", unsafe_allow_html=True)    
+    #                     i += 1 
+    #                     blank()
                 
             
-        if search_content:   
+    #     if search_content:   
 
-            if st.session_state['valid_password']:
+    #         if st.session_state['valid_password']:
             
-                with st.spinner("Finding content"):
-                    ai = AI(index) 
-                    docs = ai.embed_and_get_closest_docs(content_query) 
+    #             with st.spinner("Finding content"):
+    #                 ai = AI(index) 
+    #                 docs = ai.embed_and_get_closest_docs(content_query) 
                 
-                i = 1
-                for d in docs['matches']:  
-                    st.markdown(f"<u>**:blue[Document {i}]**</u>", unsafe_allow_html=True) #  - {d['metadata'].get('topic', '')}
-                    st.markdown(f"**Topic name**: {d['metadata'].get('topic', '')}" )
-                    st.markdown(f"**Content ID**: (copy ID below to use in modify tab)" ) #--> **:red[{d['id']}]**  
-                    st.code(f"{d['id']}", None)
-                    st.markdown(f"Submitted by: {d['metadata']['submitted_by']}")
-                    with st.expander(f"document {i} text"):
-                        st.markdown(f"{d['metadata']['text']}\n\n", unsafe_allow_html=True)  
-                        i += 1 
-                    blank() 
+    #             i = 1
+    #             for d in docs['matches']:  
+    #                 st.markdown(f"<u>**:blue[Document {i}]**</u>", unsafe_allow_html=True) #  - {d['metadata'].get('topic', '')}
+    #                 st.markdown(f"**Topic name**: {d['metadata'].get('topic', '')}" )
+    #                 st.markdown(f"**Content ID**: (copy ID below to use in modify tab)" ) #--> **:red[{d['id']}]**  
+    #                 st.code(f"{d['id']}", None)
+    #                 st.markdown(f"Submitted by: {d['metadata']['submitted_by']}")
+    #                 with st.expander(f"document {i} text"):
+    #                     st.markdown(f"{d['metadata']['text']}\n\n", unsafe_allow_html=True)  
+    #                     i += 1 
+    #                 blank() 
 
-        if show_content_requests:    
+    #     if show_content_requests:    
 
-            with st.spinner("Pulling requests"):
-                content_requests = get_content_requests() 
+    #         with st.spinner("Pulling requests"):
+    #             content_requests = get_content_requests() 
  
-            st.markdown('-----') 
+    #         st.markdown('-----') 
             
-            current_date = None
-            for r in content_requests:  
-                name = r['name'] 
-                if len(name) == 0: 
-                    name = 'no name attached' 
+    #         current_date = None
+    #         for r in content_requests:  
+    #             name = r['name'] 
+    #             if len(name) == 0: 
+    #                 name = 'no name attached' 
 
-                #st.markdown(f"**{name}**: <i>{r['request']}</i>", unsafe_allow_html=True)      
-                if r['date'] != current_date:
-                    st.caption(r['date']) 
-                    current_date = r['date'] 
+    #             #st.markdown(f"**{name}**: <i>{r['request']}</i>", unsafe_allow_html=True)      
+    #             if r['date'] != current_date:
+    #                 st.caption(r['date']) 
+    #                 current_date = r['date'] 
 
-                st.markdown(f"**{name}**: <i>{r['request']}</i>", unsafe_allow_html=True) 
-                st.code(f"{r['request_id']}", None)  
-                st.caption("Copy the above signifier to use in the 'submit content tab' ")
+    #             st.markdown(f"**{name}**: <i>{r['request']}</i>", unsafe_allow_html=True) 
+    #             st.code(f"{r['request_id']}", None)  
+    #             st.caption("Copy the above signifier to use in the 'submit content tab' ")
 
-                blank() 
-                blank()
+    #             blank() 
+    #             blank()
 
                     
-    with modify_tab:  
+    # with modify_tab:  
             
-        with st.form('modify-form'):   
-            with st.expander("Delete by Content ID"):
-                content_id = st.text_input("Content ID", help="get this from the 'view content' tab")   
+    #     with st.form('modify-form'):   
+    #         with st.expander("Delete by Content ID"):
+    #             content_id = st.text_input("Content ID", help="get this from the 'view content' tab")   
             
-            with st.expander("Bulk Delete"): 
-                topic_name = st.text_input("Delete by topic name")
+    #         with st.expander("Bulk Delete"): 
+    #             topic_name = st.text_input("Delete by topic name")
             
-            st.markdown("------")
-            modify = st.form_submit_button("Make modification") 
+    #         st.markdown("------")
+    #         modify = st.form_submit_button("Make modification") 
             
-        if modify: 
+    #     if modify: 
                     
-            modification = 'Delete' # remove this... 
+    #         modification = 'Delete' # remove this... 
 
-            content_id_delete = len(content_id) > 1 
-            topic_delete = len(topic_name) > 1
+    #         content_id_delete = len(content_id) > 1 
+    #         topic_delete = len(topic_name) > 1
 
-            if st.session_state['valid_password']:  
+    #         if st.session_state['valid_password']:  
                 
-                if modification == 'Delete': 
-                    st.info("Deleting content...") 
-                    if content_id_delete:  
-                        st.info("Deleting by content ID")
-                        index.delete(ids=[content_id.strip()])  
-                        st.success("Content has been removed")   
+    #             if modification == 'Delete': 
+    #                 st.info("Deleting content...") 
+    #                 if content_id_delete:  
+    #                     st.info("Deleting by content ID")
+    #                     index.delete(ids=[content_id.strip()])  
+    #                     st.success("Content has been removed")   
 
-                    if topic_delete: 
-                        st.info("Bulk delete by topic name") 
-                        #metadata['topic'] = text_topic.lower() 
-                        index.delete(
-                            filter={
-                                "topic": {"$eq": topic_name.lower().strip()}                        }
-                        )
-                        st.success("Content has been removed") 
+    #                 if topic_delete: 
+    #                     st.info("Bulk delete by topic name") 
+    #                     #metadata['topic'] = text_topic.lower() 
+    #                     index.delete(
+    #                         filter={
+    #                             "topic": {"$eq": topic_name.lower().strip()}                        }
+    #                     )
+    #                     st.success("Content has been removed") 
                 
-                if modification == 'View': 
-                    st.info("Section under construction")
+    #             if modification == 'View': 
+    #                 st.info("Section under construction")
                     
-            else: 
-                st.error("Invalid Password") 
+    #         else: 
+    #             st.error("Invalid Password") 
 
