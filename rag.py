@@ -132,7 +132,7 @@ class Retriever:
     def __init__(self):
 
         self.pc = Pinecone(api_key=st.secrets['PINECONE_SERVERLESS_KEY'])
-        self.index = self.pc.Index("dotbot-serverless-index")   
+        self.index = self.pc.Index("dotbot-serverless-index")    
 
     def query_pinecone_index(self, vector: list[float], top_k=7, namespace='original'):
         
@@ -158,6 +158,20 @@ class Retriever:
             namespace=namespace
         )
         
-        return response
+        return response 
+    
+    def embed_and_retrieve(self, query: str, top_k=7, namespace='original') -> dict: 
+        """
+        function to embed and retrieve docs 
+        """ 
+
+        # get embedding 
+        gpt = GPT()
+        embedding = gpt.embed(query) 
+
+        # retrieve docs 
+        docs = self.query_pinecone_index(vector=embedding, top_k=top_k, namespace=namespace)  
+
+        return docs
 
     

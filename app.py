@@ -8,7 +8,7 @@ from generate_response import AI
 
 from miniDDB import miniDDB, format_floats
 from agents import meta
-from rag import RAG 
+from rag import RAG, Retriever
 from vector_db import PineconeDB
 import helpers 
 # from doc_parsing import parse_docx, parse_pdf, parse_txt, check_file_type, split_docs 
@@ -301,6 +301,69 @@ if st.session_state.get('admin'):
             else:
                 st.error("There was a problem submitting your content")
 
+    with view_content_tab: 
+        with st.form(key='content-search-form'): 
+            
+            content_query = st.text_input("Enter a topic, query, or keywords")  
+            vc1, vc2 = st.columns(2)
+            content_agent = vc1.selectbox("Agent", ['base', 'SQL'], help="Choose the agent you'd like to search for content") 
+            num_res = vc2.number_input("Number of results", min_value=1, max_value=50, value=5, help="Choose the number of results you'd like to see")
+            search_content = st.form_submit_button("Search")  
+
+        if search_content: 
+
+            st.caption(f"Agent: **{content_agent}** | Query: **{content_query}**")   
+            content_namespace = 'original' if content_agent == 'base' else 'REDLINE-SQL'
+            
+
+            if not content_query: 
+                st.error("Please input a query")
+                st.stop()  
+
+            ret = Retriever() 
+            docs = ret.embed_and_retrieve(query=content_query, top_k=num_res, namespace=content_namespace)  
+            st.caption("Results ordered by relevance") 
+            i = 1
+            matches = docs.get('matches', []) 
+            for d in matches: 
+                d = d.to_dict() 
+                with st.expander(f"Result {i}"):  
+                    st.markdown(f"**Content**: {d['metadata']['text']}", unsafe_allow_html=True)  
+                    blank()
+                    st.markdown(f"**Tags**: {', '.join(d['metadata'].get('tags')) if len(d['metadata'].get('tags', [])) > 0 else 'None'}")    
+                    st.caption("**Content ID** - copy this to use in modify tab")
+                    st.code(d.get('id'), language='text')
+                    i += 1
+
+            
+
+    with modify_tab: 
+        
+        # modify form -- takes in content id 
+        with st.form(key='modify-form'): 
+            modify_id = st.text_input("Content ID")  
+            namespace_agent = st.selectbox("Agent", ['base', 'SQL'], help="Choose the agent you'd like to modify content for")
+            delete_content_id = st.form_submit_button("**Delete**", help="Use this to delete content from the system") 
+        
+        if delete_content_id:
+            if not modify_id: 
+                st.error("Please input a content id")
+                st.stop()   
+
+            namespace = 'original' if namespace_agent == 'base' else 'REDLINE-SQL'
+
+            ret = Retriever()
+            vector_index = ret.index 
+
+            try: 
+                vector_index.delete(ids=[str(modify_id)], namespace=namespace) 
+                st.success("Content successfully deleted") 
+            except Exception as e:
+                st.error("There was a problem deleting the content") 
+                st.error(e)
+
+            
+    
     # with input_tab: 
     #     with st.form(key='submit-form'):  
             
