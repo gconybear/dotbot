@@ -73,4 +73,21 @@ def password_authenticate(password) -> dict:
     if password == st.secrets['super_admin_password1']: 
         return {'valid': True, 'admin': True}
     
-    return {'valid': False, 'admin': False} 
+    return {'valid': False, 'admin': False}  
+
+def get_sql_examples(): 
+
+    examples = [
+        "\n- What is the occupancy at RD109?",
+        "How many move ins have we had at RD006 so far this month?",
+        "What is the temp gate code at RD157?",
+        "List the occupancy for each site code in the portfolio", 
+        "What is the current street rate for 10x10's at RD190?",
+        "How many tenants have a monthly rate $50 or greater than the street rate at their unit?",
+        "How many move ins did we have at RD030 in March 2021?", 
+        "What is the average street rate for 10x10's vs 5x5's in the portfolio?",
+        "How many tenants are on autopay at RD050?", 
+        "What percentage of tenants at RD002 have homeowner's insurance?",
+    ] 
+
+    return '\n- '.join(examples)
