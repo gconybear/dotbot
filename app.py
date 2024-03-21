@@ -258,7 +258,7 @@ if st.session_state.get('admin'):
     with input_tab:  
         # rizz
         with st.form('info-submit-form'): 
-            agent_select = st.selectbox("Agent", ['base', 'SQL', 'accounting', 'legacy queries'], help="Choose the agent you'd like to feed information to") 
+            agent_select = st.selectbox("Agent", ['', 'base', 'SQL', 'accounting', 'legacy queries'], help="Choose the agent you'd like to feed information to") 
             context_summary = st.text_input("Provide some background detail on what the content below is for", help="The topic of the content you're submitting") 
             context_full = st.text_area("Content", help="The content you're submitting")  
             st.markdown('------') 
