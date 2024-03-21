@@ -258,7 +258,7 @@ if st.session_state.get('admin'):
     with input_tab:  
         # rizz
         with st.form('info-submit-form'): 
-            agent_select = st.selectbox("Agent", ['base', 'SQL', 'accounting'], help="Choose the agent you'd like to feed information to") 
+            agent_select = st.selectbox("Agent", ['base', 'SQL', 'accounting', 'legacy queries'], help="Choose the agent you'd like to feed information to") 
             context_summary = st.text_input("Provide some background detail on what the content below is for", help="The topic of the content you're submitting") 
             context_full = st.text_area("Content", help="The content you're submitting")  
             st.markdown('------') 
@@ -287,6 +287,8 @@ if st.session_state.get('admin'):
                 namespace = 'REDLINE-SQL' 
             elif agent_select == 'accounting': 
                 namespace = 'accounting' 
+            elif agent_select == 'legacy queries':
+                namespace = 'legacy-sql' 
             else: 
                 namespace = 'original'    
 
@@ -311,14 +313,24 @@ if st.session_state.get('admin'):
             
             content_query = st.text_input("Enter a topic, query, or keywords")  
             vc1, vc2 = st.columns(2)
-            content_agent = vc1.selectbox("Agent", ['base', 'SQL'], help="Choose the agent you'd like to search for content") 
+            content_agent = vc1.selectbox("Agent", ['base', 'SQL', 'legacy queries'], help="Choose the agent you'd like to search for content") 
             num_res = vc2.number_input("Number of results", min_value=1, max_value=50, value=5, help="Choose the number of results you'd like to see")
             search_content = st.form_submit_button("Search")  
 
         if search_content: 
 
-            st.caption(f"Agent: **{content_agent}** | Query: **{content_query}**")   
-            content_namespace = 'original' if content_agent == 'base' else 'REDLINE-SQL'
+            st.caption(f"Agent: **{content_agent}** | Query: **{content_query}**")    
+            if content_agent == 'base':
+                content_namespace = 'original'
+            elif content_agent == 'SQL':
+                content_namespace = 'REDLINE-SQL'
+            elif content_agent == 'legacy queries':
+                content_namespace = 'legacy-sql'  
+            else:
+                st.error(f"Agent {content_agent} not found") 
+                st.stop()
+            
+            #content_namespace = 'original' if content_agent == 'base' else 'REDLINE-SQL'
             
 
             if not content_query: 
@@ -347,7 +359,7 @@ if st.session_state.get('admin'):
         # modify form -- takes in content id 
         with st.form(key='modify-form'): 
             modify_id = st.text_input("Content ID")  
-            namespace_agent = st.selectbox("Agent", ['base', 'SQL'], help="Choose the agent you'd like to modify content for")
+            namespace_agent = st.selectbox("Agent", ['base', 'SQL', 'legacy queries'], help="Choose the agent you'd like to modify content for")
             delete_content_id = st.form_submit_button("**Delete**", help="Use this to delete content from the system") 
         
         if delete_content_id:
@@ -355,7 +367,17 @@ if st.session_state.get('admin'):
                 st.error("Please input a content id")
                 st.stop()   
 
-            namespace = 'original' if namespace_agent == 'base' else 'REDLINE-SQL'
+            #namespace = 'original' if namespace_agent == 'base' else 'REDLINE-SQL' 
+
+            if namespace_agent == 'base':
+                namespace = 'original'
+            elif namespace_agent == 'SQL':
+                namespace = 'REDLINE-SQL'
+            elif namespace_agent == 'legacy queries':
+                namespace = 'legacy-sql'  
+            else:
+                st.error(f"Agent {namespace_agent} not found") 
+                st.stop()
 
             ret = Retriever()
             vector_index = ret.index 
