@@ -140,7 +140,7 @@ with ask_tab:
             csv_output = st.checkbox("Output csv", help="check this box if you want the output to be in csv format") 
 
         blank()
-        ask = st.form_submit_button("Ask DB") 
+        ask = st.form_submit_button(f"Ask DB (**{chat_agent}**)") 
   
     if ask:  
 
@@ -170,7 +170,7 @@ with ask_tab:
                     # ans is a csv string, turn it into a dataframe
                     csv_file_like_object = StringIO(ans)
                     df = pd.read_csv(csv_file_like_object) 
-                    st.markdown("Here are the results in csv format. Use the button below to download the data.") 
+                    st.write_stream(helpers.stream_chat("Here are the results in csv format. Use the button below to download the data.")) 
                     st.download_button(label="Download Data",
                                         data=ans,
                                         file_name="dotbot_output.csv",
@@ -180,7 +180,8 @@ with ask_tab:
                     st.code(code)
                      
                 else:
-                    st.markdown(ans)    
+                    #st.markdown(ans)     
+                    st.write_stream(helpers.stream_chat(ans))
 
                 ddb_item = {
                     "timestamp": datetime.now().isoformat(),
@@ -216,7 +217,7 @@ with ask_tab:
                         i += 1 
             
             if chat_agent == 'SQL': 
-                with st.expander("SQL Examples"): 
+                with st.expander("Reference Queries"): 
                     st.markdown(docs, unsafe_allow_html=True)
                 
                 

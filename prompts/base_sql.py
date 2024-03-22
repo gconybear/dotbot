@@ -6,14 +6,14 @@ Here is how you can make a SQL query in this environment. Fill in the SQL string
 ```python
 from tools import db_connection 
 
-# IF NEEDED, PRE-PARSING HERE (std lib only)
+# IF NEEDED, PRE-PARSING HERE (std lib encouraged, numpy and pandas available)
 
 sql = "" # INSERT SQL STRING HERE
 cursor = db_connection.get_sql_connection() 
 cursor.execute(sql) 
 data = cursor.fetchall()  
 
-# PARSE DATA HERE (std lib only)
+# PARSE DATA HERE (std lib encouraged, numpy and pandas available)
 
 # store the final output in a variable called `result`
 ``` 
@@ -49,7 +49,7 @@ A few helpful tips for writing SQL queries in this environment:
 
 Now, please return a json object with the following keys:
 
-- `code` contains the code to be executed (see example code above to make a sql query). The code MUST be able to be executed with the final output stored in a variable called `result`. For example, if a user query requires you to make a sql call and then do custom parsing of the data, make sure to store the final output in a variable called `result`. It is imperative that the variable `result` is in the code! Also crucial – you must **only** use modules and libraries from the Python Standard Library!!
+- `code` contains the code to be executed (see example code above to make a sql query). The code MUST be able to be executed with the final output stored in a variable called `result`. For example, if a user query requires you to make a sql call and then do custom parsing of the data, make sure to store the final output in a variable called `result`. It is imperative that the variable `result` is in the code! Also crucial – try to keep library usage to only the Python Standard Library, but you do also have `numpy` and `pandas` available in this environment if needed.
 
 - `comments`: short string with any comments on code used
 """ 

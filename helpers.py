@@ -1,11 +1,18 @@
-import uuid 
+import uuid  
+import time
 import streamlit as st  
 from operator import itemgetter 
 import pytz 
 import pickle 
 import re 
 
-eastern_tz = pytz.timezone('US/Eastern')   
+eastern_tz = pytz.timezone('US/Eastern')    
+
+def stream_chat(mssg: str): 
+    for word in mssg.split(' '): 
+        yield word + " "
+        time.sleep(0.02)
+
 
 def contains_shortcut(text):
     # Define a regex pattern to match '--' followed by an optional space and then any word or phrase
