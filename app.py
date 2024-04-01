@@ -129,7 +129,7 @@ with ask_tab:
     
     csv_output = False 
     if chat_agent == 'SQL':
-        with st.expander("SQL Examples"): 
+        with st.expander("Example Questions"): 
             st.markdown("Here are some examples of the types of questions you can ask the SQL agent.\n\n") 
             st.markdown(helpers.get_sql_examples(), unsafe_allow_html=True)
             blank()

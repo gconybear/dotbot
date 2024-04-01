@@ -86,6 +86,8 @@ def get_sql_examples():
 
     examples = [
         "\n- What is the occupancy at RD109?",
+        "How many Unit Check tasks are open right now?", 
+        "List out all the different task types and how many tasks are open for each", 
         "How many move ins have we had at RD006 so far this month?",
         "What is the temp gate code at RD157?",
         "List the occupancy for each site code in the portfolio", 
