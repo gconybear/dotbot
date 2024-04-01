@@ -71,8 +71,8 @@ def password_authenticate(password) -> dict:
 
     password = password.strip()
 
-    if password == st.secrets['base_password']: 
-        return {'valid': True, 'admin': False}
+    if (password == st.secrets['base_password']) | (password == st.secrets.get('guest_password')): 
+        return {'valid': True, 'admin': False} 
     
     if password == st.secrets['super_admin_password']: 
         return {'valid': True, 'admin': True}
