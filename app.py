@@ -190,6 +190,7 @@ with ask_tab:
                     "response_time": end - start,
                     "interface": 'app',
                     'file_output': csv_output,
+                    'app_password': str(master_password),
                     "success": True
                 } 
 
