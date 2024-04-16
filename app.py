@@ -321,7 +321,7 @@ if st.session_state.get('admin'):
 
         if search_content: 
 
-            st.caption(f"Agent: **{content_agent}** | Query: **{content_query}**")    
+            #st.caption(f"Agent: **{content_agent}** | Query: **{content_query}**")    
             if content_agent == 'base':
                 content_namespace = 'original'
             elif content_agent == 'SQL':
@@ -330,7 +330,9 @@ if st.session_state.get('admin'):
                 content_namespace = 'legacy-sql'  
             else:
                 st.error(f"Agent {content_agent} not found") 
-                st.stop()
+                st.stop() 
+
+            st.caption(f"Agent: **{content_agent}** | Namespace: **{content_namespace}** | Query: **{content_query}**")
             
             #content_namespace = 'original' if content_agent == 'base' else 'REDLINE-SQL'
             
