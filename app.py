@@ -306,7 +306,10 @@ if st.session_state.get('admin'):
                               namespace=namespace, 
                               submitted_by=submitted_by_name) 
             if success: 
-                st.success("Content successfully submitted") 
+                st.success("Content successfully submitted")   
+                blank() 
+                st.caption("Submitted content")
+                st.code(concat_context, language='text')
             else:
                 st.error("There was a problem submitting your content")
 
